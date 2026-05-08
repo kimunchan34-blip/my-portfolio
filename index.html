@@ -347,6 +347,31 @@ tbody tr:hover { background: var(--surface2); }
 .tri-label { font-size: 10px; color: var(--text3); margin-bottom: 4px; }
 .tri-val { font-size: 14px; font-weight: 700; font-family: var(--mono); }
 
+/* ───── AUTO PRICE FETCH ───── */
+.price-status {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; font-family: var(--mono); padding: 2px 7px;
+  border-radius: 4px; font-weight: 600;
+}
+.price-status.ok    { background: var(--up-dim); color: var(--up); }
+.price-status.err   { background: var(--down-dim); color: var(--down); }
+.price-status.wait  { background: var(--surface3); color: var(--text3); }
+.price-status.loading { background: rgba(59,130,246,0.12); color: var(--accent); }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { display: inline-block; animation: spin 0.8s linear infinite; }
+
+.fetch-all-bar {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px 18px; margin-bottom: 20px;
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.fetch-progress { flex: 1; min-width: 160px; }
+.fetch-progress-bar { height: 4px; background: var(--surface3); border-radius: 2px; overflow: hidden; margin-top: 6px; }
+.fetch-progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--up)); border-radius: 2px; transition: width 0.4s ease; width: 0%; }
+.fetch-label { font-size: 11px; color: var(--text2); }
+.last-fetch { font-size: 10px; font-family: var(--mono); color: var(--text3); margin-left: auto; }
+
 /* ───── SCROLLBAR ───── */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -420,6 +445,7 @@ tbody tr:hover { background: var(--surface2); }
         <p id="lastUpdate">최종 업데이트: —</p>
       </div>
       <div class="topbar-right">
+        <button class="btn btn-ghost" id="btnFetchAll" onclick="fetchAllPrices()">⚡ 시세 자동 갱신</button>
         <button class="btn btn-ghost" onclick="openAddHolding()">＋ 종목 추가</button>
         <button class="btn btn-primary" onclick="openDailyLog()">📝 일별 기록</button>
       </div>
@@ -649,8 +675,21 @@ tbody tr:hover { background: var(--surface2); }
     <div class="topbar">
       <div class="topbar-left">
         <h1>주가 조회</h1>
-        <p style="font-size:12px;color:var(--text2);margin-top:4px">Yahoo Finance 링크로 실시간 주가를 확인하세요</p>
+        <p style="font-size:12px;color:var(--text2);margin-top:4px">Yahoo Finance API로 현재가를 자동으로 불러옵니다</p>
       </div>
+      <div class="topbar-right">
+        <button class="btn btn-primary" id="btnFetchAll2" onclick="fetchAllPrices()">⚡ 전체 시세 갱신</button>
+      </div>
+    </div>
+
+    <!-- fetch progress bar -->
+    <div class="fetch-all-bar" id="fetchBar" style="display:none">
+      <div style="font-size:18px">⚡</div>
+      <div class="fetch-progress">
+        <div class="fetch-label" id="fetchLabel">시세 불러오는 중...</div>
+        <div class="fetch-progress-bar"><div class="fetch-progress-fill" id="fetchFill"></div></div>
+      </div>
+      <div class="last-fetch" id="fetchTime"></div>
     </div>
     <div class="ticker-search-card">
       <div class="section-title" style="margin-bottom:12px">종목 빠른 조회</div>
@@ -666,15 +705,16 @@ tbody tr:hover { background: var(--surface2); }
       </div>
     </div>
 
-    <!-- Quick links for holdings -->
+    <!-- Holdings price table -->
     <div class="section-header">
-      <div><div class="section-title">보유 종목 빠른 링크</div><div class="section-sub">클릭하면 Yahoo Finance에서 주가 확인</div></div>
+      <div><div class="section-title">보유 종목 현재가</div><div class="section-sub">⚡ 전체 갱신 버튼으로 Yahoo Finance에서 자동으로 시세를 불러옵니다</div></div>
     </div>
     <div class="table-wrap">
       <table>
         <thead><tr>
           <th>종목</th><th>시장</th><th>증권사</th><th class="right">보유수량</th>
-          <th class="right">매입가</th><th class="right">현재입력가</th><th>Yahoo Finance</th><th>현재가 업데이트</th>
+          <th class="right">매입가</th><th class="right">현재가</th>
+          <th class="right">전일대비</th><th>상태</th><th>개별갱신</th>
         </tr></thead>
         <tbody id="quoteTable"></tbody>
       </table>
@@ -1216,52 +1256,177 @@ function renderDivList() {
 // ════════════════════════════════════════
 //  QUOTE
 // ════════════════════════════════════════
+// ════════════════════════════════════════
+//  AUTO PRICE FETCH  (Yahoo Finance via allorigins proxy)
+// ════════════════════════════════════════
+const PROXY = 'https://query1.finance.yahoo.com/v8/finance/chart/';
+
+function yahooTicker(h) {
+  if (h.market === 'KR') return h.ticker + '.KS';
+  if (h.market !== 'US' && h.market !== 'ETF' && h.ticker.length === 6 && !isNaN(h.ticker)) return h.ticker + '.KS';
+  return h.ticker;
+}
+
+async function fetchOneTicker(h) {
+  const sym = yahooTicker(h);
+  const url = `https://corsproxy.io/?${encodeURIComponent(PROXY + sym + '?interval=1d&range=2d')}`;
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    const meta = json?.chart?.result?.[0]?.meta;
+    if (!meta) throw new Error('no meta');
+    const price   = meta.regularMarketPrice ?? null;
+    const prevClose = meta.previousClose ?? meta.chartPreviousClose ?? null;
+    if (!price) throw new Error('no price');
+    const change = prevClose ? (price - prevClose) : 0;
+    return { price, change };
+  } catch(e) {
+    // fallback: try allorigins
+    try {
+      const url2 = `https://api.allorigins.win/raw?url=${encodeURIComponent(PROXY + sym + '?interval=1d&range=2d')}`;
+      const res2 = await fetch(url2, { signal: AbortSignal.timeout(8000) });
+      const json2 = await res2.json();
+      const meta2 = json2?.chart?.result?.[0]?.meta;
+      if (!meta2) throw new Error('no meta');
+      const price2   = meta2.regularMarketPrice ?? null;
+      const prevClose2 = meta2.previousClose ?? meta2.chartPreviousClose ?? null;
+      if (!price2) throw new Error('no price');
+      const change2 = prevClose2 ? (price2 - prevClose2) : 0;
+      return { price: price2, change: change2 };
+    } catch(e2) {
+      throw new Error('조회 실패');
+    }
+  }
+}
+
+let _fetchStatus = {};   // id → 'loading'|'ok'|'err'|null
+let _isFetching  = false;
+
+async function fetchAllPrices() {
+  if (_isFetching) return;
+  if (!holdings.length) { toast('보유 종목이 없습니다', 'err'); return; }
+  _isFetching = true;
+
+  // UI setup
+  const bar  = document.getElementById('fetchBar');
+  const fill = document.getElementById('fetchFill');
+  const lbl  = document.getElementById('fetchLabel');
+  const ft   = document.getElementById('fetchTime');
+  if (bar)  bar.style.display = 'flex';
+  if (fill) fill.style.width = '0%';
+  if (lbl)  lbl.textContent = '시세 불러오는 중...';
+
+  const btn1 = document.getElementById('btnFetchAll');
+  const btn2 = document.getElementById('btnFetchAll2');
+  [btn1, btn2].forEach(b => { if (b) { b.disabled = true; b.innerHTML = '<span class="spinner">⚡</span> 갱신 중...'; }});
+
+  holdings.forEach(h => { _fetchStatus[h.id] = 'loading'; });
+  renderQuote();
+
+  let done = 0, okCount = 0, errCount = 0;
+  const total = holdings.length;
+
+  // fetch with small delay between requests to avoid rate limit
+  for (const h of holdings) {
+    try {
+      const { price, change } = await fetchOneTicker(h);
+      h.price = price;
+      h.daily = change;
+      _fetchStatus[h.id] = 'ok';
+      okCount++;
+    } catch(e) {
+      _fetchStatus[h.id] = 'err';
+      errCount++;
+    }
+    done++;
+    if (fill) fill.style.width = (done/total*100) + '%';
+    if (lbl)  lbl.textContent = `${done}/${total} 종목 조회 중...`;
+    renderQuote();
+    renderDashboard();
+    await new Promise(r => setTimeout(r, 250));  // polite delay
+  }
+
+  saveAll();
+  const now = new Date().toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  if (lbl) lbl.textContent = `완료 — 성공 ${okCount}개 / 실패 ${errCount}개`;
+  if (ft)  ft.textContent  = `최종 갱신: ${now}`;
+  if (fill) fill.style.width = '100%';
+
+  // update lastUpdate label on dashboard
+  const lu = document.getElementById('lastUpdate');
+  if (lu) lu.textContent = `최종 업데이트: ${now}`;
+
+  [btn1, btn2].forEach(b => { if (b) { b.disabled = false; b.innerHTML = '⚡ 시세 자동 갱신'; }});
+  if (btn2) btn2.innerHTML = '⚡ 전체 시세 갱신';
+
+  toast(`시세 갱신 완료 (성공 ${okCount} / 실패 ${errCount})`, okCount>0?'ok':'err');
+  _isFetching = false;
+}
+
+async function fetchSinglePrice(id) {
+  const h = holdings.find(x=>x.id===id);
+  if (!h) return;
+  _fetchStatus[id] = 'loading';
+  renderQuote();
+  try {
+    const { price, change } = await fetchOneTicker(h);
+    h.price = price;
+    h.daily = change;
+    _fetchStatus[id] = 'ok';
+    saveAll();
+    renderDashboard();
+    toast(`${h.name} 현재가 갱신 완료 → ${fmtNum(price, h.market==='KR'?0:2)}`, 'ok');
+  } catch(e) {
+    _fetchStatus[id] = 'err';
+    toast(`${h.name} 시세 조회 실패 — 잠시 후 재시도하세요`, 'err');
+  }
+  renderQuote();
+}
+
 function renderQuote() {
   const tbody = document.getElementById('quoteTable');
   const empty = document.getElementById('quoteEmpty');
   if (!holdings.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
   tbody.innerHTML = holdings.map((h,i)=>{
-    const yahooTicker = (h.market==='KR'||(h.ticker.length===6&&!isNaN(h.ticker))) ? h.ticker+'.KS' : h.ticker;
+    const st = _fetchStatus[h.id];
+    let statusBadge;
+    if (st === 'loading') statusBadge = `<span class="price-status loading"><span class="spinner">↻</span> 조회중</span>`;
+    else if (st === 'ok') statusBadge = `<span class="price-status ok">✓ 갱신됨</span>`;
+    else if (st === 'err') statusBadge = `<span class="price-status err">✕ 실패</span>`;
+    else statusBadge = `<span class="price-status wait">— 대기</span>`;
+
+    const isKR  = h.market === 'KR';
+    const dec   = isKR ? 0 : 2;
+    const curr  = isKR ? '₩' : '$';
+    const dailyCls = cls(h.daily||0);
+    const dailySign = (h.daily||0) >= 0 ? '+' : '';
+
     return `<tr>
       <td><div class="ticker-cell">
         <div class="ticker-icon" style="background:${PALETTE[i%PALETTE.length]}">${h.name[0]}</div>
-        <div><div class="ticker-name">${h.name}</div><div class="ticker-code">${h.ticker}</div></div>
+        <div><div class="ticker-name">${h.name}</div><div class="ticker-code">${yahooTicker(h)}</div></div>
       </div></td>
       <td><span class="market-badge badge-${h.market.toLowerCase()}">${h.market}</span></td>
       <td>${brokerBadge(h.broker)}</td>
-      <td class="right" style="font-family:var(--mono)">${fmtNum(h.qty,0)}</td>
-      <td class="right" style="font-family:var(--mono)">${fmtNum(h.avg)}</td>
-      <td class="right">
-        <input type="number" value="${h.price}" step="0.01"
-          style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;width:100px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;text-align:right"
-          onchange="updatePrice('${h.id}',this.value)">
-      </td>
-      <td><a href="https://finance.yahoo.com/quote/${encodeURIComponent(yahooTicker)}" target="_blank" class="price-link">Yahoo Finance ↗</a></td>
+      <td class="right mono">${fmtNum(h.qty,0)}</td>
+      <td class="right mono">${curr}${fmtNum(h.avg, dec)}</td>
+      <td class="right mono" style="font-weight:600">${curr}${fmtNum(h.price, dec)}</td>
+      <td class="right mono ${dailyCls}">${dailySign}${fmtNum(h.daily||0, dec)}</td>
+      <td>${statusBadge}</td>
       <td>
-        <button class="btn btn-ghost btn-sm" onclick="refreshPrice('${h.id}')">✓ 적용</button>
+        <button class="btn btn-ghost btn-sm" onclick="fetchSinglePrice('${h.id}')" ${st==='loading'?'disabled':''}>↻ 갱신</button>
       </td>
     </tr>`;
   }).join('');
 }
 
 function openYahoo() {
-  const t = document.getElementById('quoteInput').value.trim();
+  const t = document.getElementById('quoteInput')?.value?.trim();
   if (!t) { toast('티커를 입력하세요','err'); return; }
   const ticker = (t.length===6&&!isNaN(t)) ? t+'.KS' : t;
   window.open('https://finance.yahoo.com/quote/'+encodeURIComponent(ticker), '_blank');
-}
-function updatePrice(id, val) {
-  const h = holdings.find(x=>x.id===id);
-  if (h) h._pendingPrice = parseFloat(val)||0;
-}
-function refreshPrice(id) {
-  const h = holdings.find(x=>x.id===id);
-  if (!h) return;
-  if (h._pendingPrice!==undefined) { h.price = h._pendingPrice; delete h._pendingPrice; }
-  save('pf_holdings', holdings);
-  toast(`${h.name} 현재가 업데이트 완료`, 'ok');
-  renderQuote();
 }
 
 // ════════════════════════════════════════
