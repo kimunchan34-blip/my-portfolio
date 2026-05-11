@@ -829,6 +829,124 @@ tbody tr:hover { background: var(--surface2); }
     </div>
   </div>
 
+<!-- ── REAL ESTATE ── -->
+<div id="page-realestate" class="page">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>🏢 부동산 관리</h1>
+      <p id="re-lastUpdate">임대수익률 · 시세 · 양도세 종합 관리</p>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost" onclick="reFetchAll()">⚡ 시세 갱신</button>
+      <button class="btn btn-primary" onclick="openAddProp()">＋ 부동산 추가</button>
+    </div>
+  </div>
+
+  <!-- 요약 카드 -->
+  <div class="re-summary-grid" id="reSummary"></div>
+
+  <!-- 물건 카드 목록 -->
+  <div class="section-header">
+    <div><div class="section-title">보유 부동산</div><div class="section-sub">카드를 클릭하면 세부 편집 · 양도세 시뮬레이션</div></div>
+  </div>
+  <div class="re-card-grid" id="rePropGrid"></div>
+
+  <!-- 임대 내역 -->
+  <div class="section-header" style="margin-top:8px">
+    <div><div class="section-title">임대 수익 내역</div><div class="section-sub">월세·전세 보증금 수익 기록</div></div>
+    <button class="btn btn-ghost btn-sm" onclick="openAddRental()">＋ 임대 추가</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>물건</th><th>유형</th><th>임차인</th>
+        <th class="right">보증금</th><th class="right">월세/연수익</th>
+        <th>계약기간</th><th class="right">임대수익률</th><th>관리</th>
+      </tr></thead>
+      <tbody id="rentalTable"></tbody>
+    </table>
+    <div id="rentalEmpty" class="empty" style="display:none">
+      <div class="ei">🏠</div><p>임대 내역을 추가해 주세요</p>
+    </div>
+  </div>
+
+  <!-- 양도세 시뮬레이터 -->
+  <div class="tax-panel">
+    <div class="tax-panel-title">🧮 양도소득세 시뮬레이터</div>
+    <div class="tax-grid">
+      <div class="tax-inputs">
+        <div class="tax-input-row">
+          <div class="tax-input-label">물건 선택</div>
+          <select class="tax-select-field" id="tx-prop" onchange="taxCalc()">
+            <option value="">직접 입력</option>
+          </select>
+        </div>
+        <div class="tax-input-row">
+          <div class="tax-input-label">취득가액 (만원)</div>
+          <input class="tax-input-field" id="tx-buy" type="number" placeholder="30000" oninput="taxCalc()">
+        </div>
+        <div class="tax-input-row">
+          <div class="tax-input-label">양도가액 (만원)</div>
+          <input class="tax-input-field" id="tx-sell" type="number" placeholder="45000" oninput="taxCalc()">
+        </div>
+        <div class="tax-input-row">
+          <div class="tax-input-label">필요경비 (만원)</div>
+          <input class="tax-input-field" id="tx-cost" type="number" placeholder="500" oninput="taxCalc()">
+        </div>
+        <div class="tax-input-row">
+          <div class="tax-input-label">보유기간</div>
+          <select class="tax-select-field" id="tx-hold" onchange="taxCalc()">
+            <option value="0">1년 미만</option>
+            <option value="1">1년 이상 ~ 2년 미만</option>
+            <option value="2" selected>2년 이상</option>
+          </select>
+        </div>
+        <div class="tax-input-row">
+          <div class="tax-input-label">주택 수</div>
+          <select class="tax-select-field" id="tx-count" onchange="taxCalc()">
+            <option value="1">1주택 (비과세 검토)</option>
+            <option value="2" selected>2주택</option>
+            <option value="3">3주택 이상</option>
+          </select>
+        </div>
+        <div class="tax-input-row">
+          <div class="tax-input-label">조정대상지역</div>
+          <select class="tax-select-field" id="tx-adj" onchange="taxCalc()">
+            <option value="0">해당없음</option>
+            <option value="1">조정대상지역</option>
+          </select>
+        </div>
+        <div class="tax-input-row">
+          <div class="tax-input-label">1세대1주택 비과세</div>
+          <select class="tax-select-field" id="tx-exempt" onchange="taxCalc()">
+            <option value="0">해당없음</option>
+            <option value="1">2년 이상 보유 (비과세)</option>
+            <option value="2">고가주택 (12억 초과)</option>
+          </select>
+        </div>
+        <div class="tax-input-row">
+          <div class="tax-input-label">장기보유특별공제</div>
+          <select class="tax-select-field" id="tx-ltdc" onchange="taxCalc()">
+            <option value="0">해당없음</option>
+            <option value="3">3년 이상 (6%)</option>
+            <option value="5">5년 이상 (10%)</option>
+            <option value="10">10년 이상 (20%)</option>
+            <option value="15">15년 이상 (30%)</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div class="tax-result" id="taxResult">
+          <div class="tax-result-title">📊 세금 계산 결과</div>
+          <div style="color:var(--text3);font-size:12px;text-align:center;padding:20px 0">
+            좌측에 정보를 입력하면<br>자동 계산됩니다
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </main>
 
 <!-- ── MODAL: 종목 추가/수정 ── -->
@@ -974,123 +1092,6 @@ tbody tr:hover { background: var(--surface2); }
   </div>
 </div>
 
-<!-- ── REAL ESTATE ── -->
-<div id="page-realestate" class="page">
-  <div class="topbar">
-    <div class="topbar-left">
-      <h1>🏢 부동산 관리</h1>
-      <p id="re-lastUpdate">임대수익률 · 시세 · 양도세 종합 관리</p>
-    </div>
-    <div class="topbar-right">
-      <button class="btn btn-ghost" onclick="reFetchAll()">⚡ 시세 갱신</button>
-      <button class="btn btn-primary" onclick="openAddProp()">＋ 부동산 추가</button>
-    </div>
-  </div>
-
-  <!-- 요약 카드 -->
-  <div class="re-summary-grid" id="reSummary"></div>
-
-  <!-- 물건 카드 목록 -->
-  <div class="section-header">
-    <div><div class="section-title">보유 부동산</div><div class="section-sub">카드를 클릭하면 세부 편집 · 양도세 시뮬레이션</div></div>
-  </div>
-  <div class="re-card-grid" id="rePropGrid"></div>
-
-  <!-- 임대 내역 -->
-  <div class="section-header" style="margin-top:8px">
-    <div><div class="section-title">임대 수익 내역</div><div class="section-sub">월세·전세 보증금 수익 기록</div></div>
-    <button class="btn btn-ghost btn-sm" onclick="openAddRental()">＋ 임대 추가</button>
-  </div>
-  <div class="table-wrap">
-    <table>
-      <thead><tr>
-        <th>물건</th><th>유형</th><th>임차인</th>
-        <th class="right">보증금</th><th class="right">월세/연수익</th>
-        <th>계약기간</th><th class="right">임대수익률</th><th>관리</th>
-      </tr></thead>
-      <tbody id="rentalTable"></tbody>
-    </table>
-    <div id="rentalEmpty" class="empty" style="display:none">
-      <div class="ei">🏠</div><p>임대 내역을 추가해 주세요</p>
-    </div>
-  </div>
-
-  <!-- 양도세 시뮬레이터 -->
-  <div class="tax-panel">
-    <div class="tax-panel-title">🧮 양도소득세 시뮬레이터</div>
-    <div class="tax-grid">
-      <div class="tax-inputs">
-        <div class="tax-input-row">
-          <div class="tax-input-label">물건 선택</div>
-          <select class="tax-select-field" id="tx-prop" onchange="taxCalc()">
-            <option value="">직접 입력</option>
-          </select>
-        </div>
-        <div class="tax-input-row">
-          <div class="tax-input-label">취득가액 (만원)</div>
-          <input class="tax-input-field" id="tx-buy" type="number" placeholder="30000" oninput="taxCalc()">
-        </div>
-        <div class="tax-input-row">
-          <div class="tax-input-label">양도가액 (만원)</div>
-          <input class="tax-input-field" id="tx-sell" type="number" placeholder="45000" oninput="taxCalc()">
-        </div>
-        <div class="tax-input-row">
-          <div class="tax-input-label">필요경비 (만원)</div>
-          <input class="tax-input-field" id="tx-cost" type="number" placeholder="500" oninput="taxCalc()">
-        </div>
-        <div class="tax-input-row">
-          <div class="tax-input-label">보유기간</div>
-          <select class="tax-select-field" id="tx-hold" onchange="taxCalc()">
-            <option value="0">1년 미만</option>
-            <option value="1">1년 이상 ~ 2년 미만</option>
-            <option value="2" selected>2년 이상</option>
-          </select>
-        </div>
-        <div class="tax-input-row">
-          <div class="tax-input-label">주택 수</div>
-          <select class="tax-select-field" id="tx-count" onchange="taxCalc()">
-            <option value="1">1주택 (비과세 검토)</option>
-            <option value="2" selected>2주택</option>
-            <option value="3">3주택 이상</option>
-          </select>
-        </div>
-        <div class="tax-input-row">
-          <div class="tax-input-label">조정대상지역</div>
-          <select class="tax-select-field" id="tx-adj" onchange="taxCalc()">
-            <option value="0">해당없음</option>
-            <option value="1">조정대상지역</option>
-          </select>
-        </div>
-        <div class="tax-input-row">
-          <div class="tax-input-label">1세대1주택 비과세</div>
-          <select class="tax-select-field" id="tx-exempt" onchange="taxCalc()">
-            <option value="0">해당없음</option>
-            <option value="1">2년 이상 보유 (비과세)</option>
-            <option value="2">고가주택 (12억 초과)</option>
-          </select>
-        </div>
-        <div class="tax-input-row">
-          <div class="tax-input-label">장기보유특별공제</div>
-          <select class="tax-select-field" id="tx-ltdc" onchange="taxCalc()">
-            <option value="0">해당없음</option>
-            <option value="3">3년 이상 (6%)</option>
-            <option value="5">5년 이상 (10%)</option>
-            <option value="10">10년 이상 (20%)</option>
-            <option value="15">15년 이상 (30%)</option>
-          </select>
-        </div>
-      </div>
-      <div>
-        <div class="tax-result" id="taxResult">
-          <div class="tax-result-title">📊 세금 계산 결과</div>
-          <div style="color:var(--text3);font-size:12px;text-align:center;padding:20px 0">
-            좌측에 정보를 입력하면<br>자동 계산됩니다
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- ── MODAL: 부동산 추가/편집 ── -->
 <div class="overlay" id="modalProp" onclick="closeModal('modalProp',event)">
