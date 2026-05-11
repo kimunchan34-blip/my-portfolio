@@ -481,6 +481,108 @@ tbody tr:hover { background: var(--surface2); }
 }
 .logout-btn:hover { border-color: var(--down); color: var(--down); }
 
+/* ───── REAL ESTATE ───── */
+.re-summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
+.re-card-grid    { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; margin-bottom:24px; }
+
+.re-prop-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:16px; overflow:hidden; transition:border-color .2s;
+  position:relative;
+}
+.re-prop-card:hover { border-color:var(--border2); }
+.re-prop-card-header {
+  padding:16px 18px 12px;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:flex-start; gap:12px;
+}
+.re-prop-icon {
+  width:42px; height:42px; border-radius:12px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px;
+}
+.re-prop-name  { font-size:14px; font-weight:700; margin-bottom:2px; }
+.re-prop-addr  { font-size:11px; color:var(--text3); line-height:1.5; }
+.re-type-badge {
+  margin-left:auto; flex-shrink:0;
+  padding:3px 8px; border-radius:6px;
+  font-size:10px; font-weight:700;
+}
+.re-type-apt   { background:rgba(59,130,246,.15); color:#60a5fa; }
+.re-type-villa { background:rgba(168,85,247,.15);  color:#c084fc; }
+.re-type-office{ background:rgba(245,158,11,.15);  color:#fbbf24; }
+.re-type-land  { background:rgba(16,185,129,.15);  color:#34d399; }
+.re-type-상가   { background:rgba(239,68,68,.15);   color:#f87171; }
+
+.re-prop-body { padding:14px 18px; }
+.re-kv-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; margin-bottom:12px; }
+.re-kv { }
+.re-kv-label { font-size:10px; color:var(--text3); font-weight:600; letter-spacing:.5px; margin-bottom:2px; }
+.re-kv-val   { font-size:13px; font-weight:700; font-family:var(--mono); }
+
+.re-yield-bar { margin:10px 0; }
+.re-yield-track { height:6px; background:var(--surface3); border-radius:3px; overflow:hidden; margin-top:4px; }
+.re-yield-fill  { height:100%; border-radius:3px; transition:width .6s ease; }
+
+.re-prop-footer {
+  padding:10px 18px; border-top:1px solid var(--border);
+  display:flex; gap:8px; align-items:center;
+}
+
+/* 세금 시뮬레이터 */
+.tax-panel {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:16px; padding:22px; margin-bottom:24px;
+}
+.tax-panel-title { font-size:15px; font-weight:700; margin-bottom:18px; display:flex; align-items:center; gap:8px; }
+.tax-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.tax-inputs { display:flex; flex-direction:column; gap:10px; }
+.tax-input-row { display:grid; grid-template-columns:140px 1fr; align-items:center; gap:8px; }
+.tax-input-label { font-size:11px; color:var(--text2); font-weight:600; }
+.tax-input-field {
+  padding:8px 10px; background:var(--surface2);
+  border:1px solid var(--border); border-radius:8px;
+  color:var(--text); font-size:12px; font-family:var(--mono);
+  outline:none; width:100%;
+}
+.tax-input-field:focus { border-color:var(--accent); }
+.tax-select-field {
+  padding:8px 10px; background:var(--surface2);
+  border:1px solid var(--border); border-radius:8px;
+  color:var(--text); font-size:12px; font-family:inherit;
+  outline:none; width:100%;
+}
+
+.tax-result { background:var(--surface2); border-radius:12px; padding:16px; }
+.tax-result-title { font-size:12px; color:var(--text2); font-weight:600; margin-bottom:12px; }
+.tax-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:6px 0; border-bottom:1px solid var(--border); font-size:12px;
+}
+.tax-row:last-child { border:none; }
+.tax-row-label { color:var(--text2); }
+.tax-row-val   { font-family:var(--mono); font-weight:600; }
+.tax-total-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 12px; border-radius:8px; margin-top:10px;
+  background:rgba(59,130,246,.1); border:1px solid rgba(59,130,246,.2);
+}
+.tax-total-label { font-size:13px; font-weight:700; color:var(--accent); }
+.tax-total-val   { font-size:16px; font-weight:800; font-family:var(--mono); color:var(--accent); }
+.tax-warn { font-size:10px; color:var(--text3); margin-top:8px; line-height:1.6; }
+
+/* 임대 내역 테이블 */
+.rental-badge {
+  display:inline-flex; padding:2px 8px; border-radius:5px;
+  font-size:10px; font-weight:700;
+}
+.rb-monthly  { background:rgba(0,217,126,.12); color:var(--up); }
+.rb-jeonse   { background:rgba(59,130,246,.12); color:#60a5fa; }
+.rb-empty    { background:rgba(100,116,139,.12); color:var(--flat); }
+
+/* modal wide */
+.modal-wide .modal-box { max-width:620px; }
+
 /* ───── SCROLLBAR ───── */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -591,6 +693,9 @@ tbody tr:hover { background: var(--surface2); }
     </div>
     <div class="nav-item" onclick="nav('quote')">
       <span class="ni">🔍</span> 주가 조회
+    </div>
+    <div class="nav-item" onclick="nav('realestate')">
+      <span class="ni">🏢</span> 부동산
     </div>
   </div>
 
@@ -1045,6 +1150,250 @@ tbody tr:hover { background: var(--surface2); }
   </div>
 </div>
 
+<!-- ── REAL ESTATE ── -->
+<div id="page-realestate" class="page">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>🏢 부동산 관리</h1>
+      <p id="re-lastUpdate">임대수익률 · 시세 · 양도세 종합 관리</p>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost" onclick="reFetchAll()">⚡ 시세 갱신</button>
+      <button class="btn btn-primary" onclick="openAddProp()">＋ 부동산 추가</button>
+    </div>
+  </div>
+
+  <!-- 요약 카드 -->
+  <div class="re-summary-grid" id="reSummary"></div>
+
+  <!-- 물건 카드 목록 -->
+  <div class="section-header">
+    <div><div class="section-title">보유 부동산</div><div class="section-sub">카드를 클릭하면 세부 편집 · 양도세 시뮬레이션</div></div>
+  </div>
+  <div class="re-card-grid" id="rePropGrid"></div>
+
+  <!-- 임대 내역 -->
+  <div class="section-header" style="margin-top:8px">
+    <div><div class="section-title">임대 수익 내역</div><div class="section-sub">월세·전세 보증금 수익 기록</div></div>
+    <button class="btn btn-ghost btn-sm" onclick="openAddRental()">＋ 임대 추가</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>물건</th><th>유형</th><th>임차인</th>
+        <th class="right">보증금</th><th class="right">월세/연수익</th>
+        <th>계약기간</th><th class="right">임대수익률</th><th>관리</th>
+      </tr></thead>
+      <tbody id="rentalTable"></tbody>
+    </table>
+    <div id="rentalEmpty" class="empty" style="display:none">
+      <div class="ei">🏠</div><p>임대 내역을 추가해 주세요</p>
+    </div>
+  </div>
+
+  <!-- 양도세 시뮬레이터 -->
+  <div class="tax-panel">
+    <div class="tax-panel-title">🧮 양도소득세 시뮬레이터</div>
+    <div class="tax-grid">
+      <div class="tax-inputs">
+        <div class="tax-input-row">
+          <div class="tax-input-label">물건 선택</div>
+          <select class="tax-select-field" id="tx-prop" onchange="taxCalc()">
+            <option value="">직접 입력</option>
+          </select>
+        </div>
+        <div class="tax-input-row">
+          <div class="tax-input-label">취득가액 (만원)</div>
+          <input class="tax-input-field" id="tx-buy" type="number" placeholder="30000" oninput="taxCalc()">
+        </div>
+        <div class="tax-input-row">
+          <div class="tax-input-label">양도가액 (만원)</div>
+          <input class="tax-input-field" id="tx-sell" type="number" placeholder="45000" oninput="taxCalc()">
+        </div>
+        <div class="tax-input-row">
+          <div class="tax-input-label">필요경비 (만원)</div>
+          <input class="tax-input-field" id="tx-cost" type="number" placeholder="500" oninput="taxCalc()">
+        </div>
+        <div class="tax-input-row">
+          <div class="tax-input-label">보유기간</div>
+          <select class="tax-select-field" id="tx-hold" onchange="taxCalc()">
+            <option value="0">1년 미만</option>
+            <option value="1">1년 이상 ~ 2년 미만</option>
+            <option value="2" selected>2년 이상</option>
+          </select>
+        </div>
+        <div class="tax-input-row">
+          <div class="tax-input-label">주택 수</div>
+          <select class="tax-select-field" id="tx-count" onchange="taxCalc()">
+            <option value="1">1주택 (비과세 검토)</option>
+            <option value="2" selected>2주택</option>
+            <option value="3">3주택 이상</option>
+          </select>
+        </div>
+        <div class="tax-input-row">
+          <div class="tax-input-label">조정대상지역</div>
+          <select class="tax-select-field" id="tx-adj" onchange="taxCalc()">
+            <option value="0">해당없음</option>
+            <option value="1">조정대상지역</option>
+          </select>
+        </div>
+        <div class="tax-input-row">
+          <div class="tax-input-label">1세대1주택 비과세</div>
+          <select class="tax-select-field" id="tx-exempt" onchange="taxCalc()">
+            <option value="0">해당없음</option>
+            <option value="1">2년 이상 보유 (비과세)</option>
+            <option value="2">고가주택 (12억 초과)</option>
+          </select>
+        </div>
+        <div class="tax-input-row">
+          <div class="tax-input-label">장기보유특별공제</div>
+          <select class="tax-select-field" id="tx-ltdc" onchange="taxCalc()">
+            <option value="0">해당없음</option>
+            <option value="3">3년 이상 (6%)</option>
+            <option value="5">5년 이상 (10%)</option>
+            <option value="10">10년 이상 (20%)</option>
+            <option value="15">15년 이상 (30%)</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div class="tax-result" id="taxResult">
+          <div class="tax-result-title">📊 세금 계산 결과</div>
+          <div style="color:var(--text3);font-size:12px;text-align:center;padding:20px 0">
+            좌측에 정보를 입력하면<br>자동 계산됩니다
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: 부동산 추가/편집 ── -->
+<div class="modal modal-wide" id="modalProp" onclick="closeModal('modalProp',event)">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title" id="propModalTitle">🏢 부동산 추가</div>
+      <button class="modal-close" onclick="document.getElementById('modalProp').classList.remove('open')">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group">
+        <div class="form-label">물건명 *</div>
+        <input class="form-input" id="pr-name" type="text" placeholder="예: 강남구 아파트">
+      </div>
+      <div class="form-group">
+        <div class="form-label">유형</div>
+        <select class="form-select" id="pr-type">
+          <option value="아파트">아파트</option>
+          <option value="빌라">빌라/연립</option>
+          <option value="오피스텔">오피스텔</option>
+          <option value="상가">상가</option>
+          <option value="토지">토지</option>
+        </select>
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <div class="form-label">주소</div>
+        <input class="form-input" id="pr-addr" type="text" placeholder="예: 서울 강남구 역삼동 123-4">
+      </div>
+      <div class="form-group">
+        <div class="form-label">취득가액 (만원) *</div>
+        <input class="form-input" id="pr-buy" type="number" placeholder="30000">
+      </div>
+      <div class="form-group">
+        <div class="form-label">취득일</div>
+        <input class="form-input" id="pr-buydate" type="date">
+      </div>
+      <div class="form-group">
+        <div class="form-label">현재 시세 (만원)</div>
+        <input class="form-input" id="pr-price" type="number" placeholder="45000">
+      </div>
+      <div class="form-group">
+        <div class="form-label">면적 (㎡)</div>
+        <input class="form-input" id="pr-area" type="number" placeholder="84">
+      </div>
+      <div class="form-group">
+        <div class="form-label">취득세 (만원)</div>
+        <input class="form-input" id="pr-acqtax" type="number" placeholder="0">
+      </div>
+      <div class="form-group">
+        <div class="form-label">중개수수료 (만원)</div>
+        <input class="form-input" id="pr-agent" type="number" placeholder="0">
+      </div>
+      <div class="form-group">
+        <div class="form-label">기타비용 (만원)</div>
+        <input class="form-input" id="pr-etc" type="number" placeholder="0">
+      </div>
+      <div class="form-group">
+        <div class="form-label">재산세 연간 (만원)</div>
+        <input class="form-input" id="pr-proptax" type="number" placeholder="0">
+      </div>
+      <div class="form-group">
+        <div class="form-label">종합부동산세 연간 (만원)</div>
+        <input class="form-input" id="pr-jongtax" type="number" placeholder="0">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <div class="form-label">메모</div>
+        <input class="form-input" id="pr-memo" type="text" placeholder="투자 메모">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="document.getElementById('modalProp').classList.remove('open')">취소</button>
+      <button class="btn btn-success" onclick="saveProp()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL: 임대 추가 ── -->
+<div class="modal" id="modalRental" onclick="closeModal('modalRental',event)">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">🏠 임대 내역 추가</div>
+      <button class="modal-close" onclick="document.getElementById('modalRental').classList.remove('open')">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="form-group" style="grid-column:1/-1">
+        <div class="form-label">물건 선택 *</div>
+        <select class="form-select" id="rl-prop"></select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">임대 유형</div>
+        <select class="form-select" id="rl-type" onchange="toggleRentalType()">
+          <option value="월세">월세</option>
+          <option value="전세">전세</option>
+          <option value="공실">공실</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">임차인</div>
+        <input class="form-input" id="rl-tenant" type="text" placeholder="홍길동">
+      </div>
+      <div class="form-group">
+        <div class="form-label">보증금 (만원)</div>
+        <input class="form-input" id="rl-deposit" type="number" placeholder="5000">
+      </div>
+      <div class="form-group" id="rl-monthly-wrap">
+        <div class="form-label">월세 (만원/월)</div>
+        <input class="form-input" id="rl-monthly" type="number" placeholder="80">
+      </div>
+      <div class="form-group">
+        <div class="form-label">계약 시작</div>
+        <input class="form-input" id="rl-start" type="date">
+      </div>
+      <div class="form-group">
+        <div class="form-label">계약 종료</div>
+        <input class="form-input" id="rl-end" type="date">
+      </div>
+      <div class="form-group" style="grid-column:1/-1">
+        <div class="form-label">메모</div>
+        <input class="form-input" id="rl-memo" type="text" placeholder="관리비 포함 여부 등">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="document.getElementById('modalRental').classList.remove('open')">취소</button>
+      <button class="btn btn-success" onclick="saveRental()">저장</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toasts" id="toasts"></div>
 
@@ -1064,14 +1413,34 @@ const PALETTE = ['#3b82f6','#818cf8','#00d97e','#f59e0b','#f43f5e','#06b6d4','#a
 let holdings  = load('pf_holdings', sampleHoldings());
 let dailyLogs = load('pf_daily', sampleDaily());
 let dividends = load('pf_div', sampleDiv());
+let properties = load('pf_props', sampleProps());
+let rentals    = load('pf_rentals', sampleRentals());
 let editId    = null;
+let rePropEditId = null;
 let calYear   = new Date().getFullYear();
 let calMonth  = new Date().getMonth();
 
 function load(k, def) { try { return JSON.parse(localStorage.getItem(k)) || def; } catch{ return def; } }
 function save(k, v)   { localStorage.setItem(k, JSON.stringify(v)); }
-function saveAll()    { save('pf_holdings', holdings); save('pf_daily', dailyLogs); save('pf_div', dividends); }
+function saveAll()    {
+  save('pf_holdings', holdings); save('pf_daily', dailyLogs);
+  save('pf_div', dividends); save('pf_props', properties); save('pf_rentals', rentals);
+}
 function uid()        { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+function sampleProps() {
+  return [
+    { id:'p1', name:'역삼 래미안', type:'아파트', addr:'서울 강남구 역삼동 123', buy:80000, buydate:'2019-03-15', price:120000, area:84, acqtax:800, agent:480, etc:200, proptax:85, jongtax:0, memo:'1주택 보유' },
+    { id:'p2', name:'마포 오피스텔', type:'오피스텔', addr:'서울 마포구 공덕동 55', buy:25000, buydate:'2021-07-01', price:27000, area:33, acqtax:1100, agent:150, etc:50, proptax:12, jongtax:0, memo:'임대 수익용' },
+  ];
+}
+function sampleRentals() {
+  const today = new Date();
+  const y = today.getFullYear();
+  return [
+    { id:'r1', propId:'p2', type:'월세', tenant:'김철수', deposit:2000, monthly:80, start:`${y-1}-08-01`, end:`${y+1}-07-31`, memo:'관리비 별도' },
+  ];
+}
 
 function sampleHoldings() {
   return [
@@ -1110,11 +1479,13 @@ function nav(page) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.querySelector(`.nav-item[onclick="nav('${page}')"]`).classList.add('active');
-  if (page==='dashboard') renderDashboard();
-  if (page==='holdings')  renderHoldings();
-  if (page==='daily')     renderDaily();
-  if (page==='dividend')  renderDividend();
-  if (page==='quote')     renderQuote();
+  if (page==='dashboard')   renderDashboard();
+  if (page==='holdings')    renderHoldings();
+  if (page==='daily')       renderDaily();
+  if (page==='dividend')    renderDividend();
+  if (page==='quote')       renderQuote();
+  if (page==='realestate')  renderRealEstate();
+}
 }
 
 // ════════════════════════════════════════
@@ -1741,6 +2112,440 @@ function toast(msg, type='info') {
 }
 
 // ════════════════════════════════════════
+//  REAL ESTATE
+// ════════════════════════════════════════
+const RE_TYPE_ICON = { '아파트':'🏢','빌라':'🏠','오피스텔':'🏨','상가':'🏪','토지':'🌳' };
+const RE_TYPE_CLS  = { '아파트':'re-type-apt','빌라':'re-type-villa','오피스텔':'re-type-office','상가':'re-type-상가','토지':'re-type-land' };
+
+function reGross(p) {
+  // 총 취득비용 (취득가 + 취득세 + 중개료 + 기타)
+  return (p.buy||0) + (p.acqtax||0) + (p.agent||0) + (p.etc||0);
+}
+function rePnl(p)  { return (p.price||0) - reGross(p); }
+function rePnlPct(p) { const g=reGross(p); return g ? rePnl(p)/g*100 : 0; }
+function reHoldYears(p) {
+  if (!p.buydate) return 0;
+  return (Date.now() - new Date(p.buydate)) / (1000*60*60*24*365.25);
+}
+function rePyeong(p) { return p.area ? (p.area/3.305).toFixed(1) : '—'; }
+function reUnitPrice(p) { return p.area && p.price ? Math.round(p.price/p.area*3.305) : 0; }
+
+function reRentalYield(p) {
+  // 해당 물건의 임대 내역으로 연 임대수익 계산
+  const rs = rentals.filter(r=>r.propId===p.id && r.type!=='공실');
+  if (!rs.length) return 0;
+  let annualIncome = 0;
+  rs.forEach(r => {
+    if (r.type==='월세') annualIncome += (r.monthly||0)*12;
+    // 전세: 보증금 운용 수익률 3.5% 가정
+    if (r.type==='전세') annualIncome += (r.deposit||0)*0.035;
+  });
+  return p.price ? annualIncome/p.price*100 : 0;
+}
+function reNetYield(p) {
+  const rs = rentals.filter(r=>r.propId===p.id && r.type!=='공실');
+  let annualIncome = 0;
+  rs.forEach(r => {
+    if (r.type==='월세') annualIncome += (r.monthly||0)*12;
+    if (r.type==='전세') annualIncome += (r.deposit||0)*0.035;
+  });
+  const annualCost = (p.proptax||0) + (p.jongtax||0);
+  const invested = reGross(p);
+  return invested ? (annualIncome - annualCost) / invested * 100 : 0;
+}
+
+function renderRealEstate() {
+  renderReSummary();
+  renderRePropGrid();
+  renderRentalTable();
+  populateTxPropSelect();
+  taxCalc();
+}
+
+function renderReSummary() {
+  const totalBuy    = properties.reduce((s,p)=>s+reGross(p),0);
+  const totalPrice  = properties.reduce((s,p)=>s+(p.price||0),0);
+  const totalPnl    = totalPrice - totalBuy;
+  const totalPnlPct = totalBuy ? totalPnl/totalBuy*100 : 0;
+  // 연간 임대 수익
+  let annualRental = 0;
+  rentals.filter(r=>r.type!=='공실').forEach(r=>{
+    if(r.type==='월세') annualRental += (r.monthly||0)*12;
+    if(r.type==='전세') annualRental += (r.deposit||0)*0.035;
+  });
+  const totalYield = totalPrice ? annualRental/totalPrice*100 : 0;
+
+  const cards = [
+    { label:'총 자산가치', val:`${fmtNum(totalPrice,0)}만원`, sub:`취득원가 ${fmtNum(totalBuy,0)}만원`, grad:'linear-gradient(90deg,#3b82f6,#818cf8)', icon:'🏢' },
+    { label:'평가손익', val:`${totalPnl>=0?'+':''}${fmtNum(totalPnl,0)}만원`,
+      sub:`수익률 ${totalPnlPct>=0?'+':''}${totalPnlPct.toFixed(1)}%`,
+      grad: totalPnl>=0?'linear-gradient(90deg,#00d97e,#06b6d4)':'linear-gradient(90deg,#ff4d6d,#f43f5e)', icon:'📈' },
+    { label:'연간 임대수익', val:`${fmtNum(annualRental,0)}만원`, sub:`월 평균 ${fmtNum(annualRental/12,0)}만원`, grad:'linear-gradient(90deg,#f59e0b,#f97316)', icon:'💰' },
+    { label:'임대수익률', val:`${totalYield.toFixed(2)}%`, sub:`보유 ${properties.length}건 / 임대 ${rentals.filter(r=>r.type!=='공실').length}건`, grad:'linear-gradient(90deg,#a855f7,#ec4899)', icon:'📊' },
+  ];
+  document.getElementById('reSummary').innerHTML = cards.map(c=>`
+    <div class="sum-card" style="--grad:${c.grad}">
+      <div class="sum-label">${c.label}</div>
+      <div class="sum-value" style="font-size:18px">${c.val}</div>
+      <div class="sum-sub">${c.sub}</div>
+      <div class="sum-icon">${c.icon}</div>
+    </div>`).join('');
+}
+
+function renderRePropGrid() {
+  const grid = document.getElementById('rePropGrid');
+  if (!properties.length) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="ei">🏢</div><p>부동산을 추가해 주세요</p></div>`;
+    return;
+  }
+  grid.innerHTML = properties.map(p => {
+    const pnl    = rePnl(p);
+    const pnlPct = rePnlPct(p);
+    const gy     = reGross(p);
+    const gross  = reRentalYield(p);
+    const net    = reNetYield(p);
+    const yrs    = reHoldYears(p).toFixed(1);
+    const up     = pnl >= 0;
+    const yieldColor = gross>=5?'var(--up)':gross>=3?'var(--gold)':'var(--down)';
+    const rsCnt  = rentals.filter(r=>r.propId===p.id && r.type!=='공실').length;
+
+    return `
+    <div class="re-prop-card">
+      <div class="re-prop-card-header">
+        <div class="re-prop-icon" style="background:${up?'var(--up-dim)':'var(--down-dim)'}">${RE_TYPE_ICON[p.type]||'🏠'}</div>
+        <div style="flex:1;min-width:0">
+          <div class="re-prop-name">${p.name}</div>
+          <div class="re-prop-addr">${p.addr||'주소 미입력'}</div>
+        </div>
+        <span class="re-type-badge ${RE_TYPE_CLS[p.type]||''}">${p.type}</span>
+      </div>
+      <div class="re-prop-body">
+        <div class="re-kv-grid">
+          <div class="re-kv"><div class="re-kv-label">취득원가</div><div class="re-kv-val">${fmtNum(gy,0)}만</div></div>
+          <div class="re-kv"><div class="re-kv-label">현재시세</div><div class="re-kv-val" style="color:${up?'var(--up)':'var(--down)'}">${fmtNum(p.price||0,0)}만</div></div>
+          <div class="re-kv"><div class="re-kv-label">평가손익</div><div class="re-kv-val" style="color:${up?'var(--up)':'var(--down)'}">${up?'+':''}${fmtNum(pnl,0)}만</div></div>
+          <div class="re-kv"><div class="re-kv-label">수익률</div><div class="re-kv-val" style="color:${up?'var(--up)':'var(--down)'}">${up?'+':''}${pnlPct.toFixed(1)}%</div></div>
+          <div class="re-kv"><div class="re-kv-label">면적</div><div class="re-kv-val">${p.area||'—'}㎡ (${rePyeong(p)}평)</div></div>
+          <div class="re-kv"><div class="re-kv-label">3.3㎡단가</div><div class="re-kv-val">${fmtNum(reUnitPrice(p),0)}만</div></div>
+          <div class="re-kv"><div class="re-kv-label">보유기간</div><div class="re-kv-val">${yrs}년</div></div>
+          <div class="re-kv"><div class="re-kv-label">임대계약</div><div class="re-kv-val">${rsCnt}건</div></div>
+        </div>
+        <div class="re-yield-bar">
+          <div style="display:flex;justify-content:space-between;font-size:10px">
+            <span style="color:var(--text3)">임대수익률</span>
+            <span style="color:${yieldColor};font-weight:700">${gross.toFixed(2)}% (순 ${net.toFixed(2)}%)</span>
+          </div>
+          <div class="re-yield-track">
+            <div class="re-yield-fill" style="width:${Math.min(gross/8*100,100)}%;background:${yieldColor}"></div>
+          </div>
+        </div>
+      </div>
+      <div class="re-prop-footer">
+        <button class="btn btn-ghost btn-sm" onclick="openEditProp('${p.id}')">✏️ 편집</button>
+        <button class="btn btn-ghost btn-sm" onclick="taxFillFrom('${p.id}')">🧮 양도세 계산</button>
+        <button class="btn btn-ghost btn-sm" onclick="openAddRentalFor('${p.id}')">＋ 임대</button>
+        <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="deleteProp('${p.id}')">삭제</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderRentalTable() {
+  const tbody = document.getElementById('rentalTable');
+  const empty = document.getElementById('rentalEmpty');
+  if (!rentals.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML = rentals.map(r => {
+    const p     = properties.find(x=>x.id===r.propId);
+    const pName = p ? p.name : '—';
+    const annualIncome = r.type==='월세' ? (r.monthly||0)*12 : (r.type==='전세'?(r.deposit||0)*0.035:0);
+    const invested = p ? (p.price||0) : 0;
+    const yld  = invested ? annualIncome/invested*100 : 0;
+    const typeCls = r.type==='월세'?'rb-monthly':r.type==='전세'?'rb-jeonse':'rb-empty';
+    const endDate = r.end ? new Date(r.end) : null;
+    const daysLeft = endDate ? Math.ceil((endDate-Date.now())/(1000*60*60*24)) : null;
+    const expiry = daysLeft!==null ? (daysLeft<0?`<span style="color:var(--down)">만료됨</span>`:daysLeft<90?`<span style="color:var(--gold)">${daysLeft}일 남음</span>`:`<span style="color:var(--text2)">${r.end}</span>`) : '—';
+    return `<tr>
+      <td><strong>${pName}</strong></td>
+      <td><span class="rental-badge ${typeCls}">${r.type}</span></td>
+      <td>${r.tenant||'—'}</td>
+      <td class="right mono">${fmtNum(r.deposit||0,0)}만</td>
+      <td class="right mono">${r.type==='월세'?fmtNum(r.monthly||0,0)+'만/월':r.type==='전세'?fmtNum(annualIncome,1)+'만(환산)':'—'}</td>
+      <td>${r.start||'—'} ~ ${expiry}</td>
+      <td class="right mono" style="color:${yld>=4?'var(--up)':yld>=2?'var(--gold)':'var(--text2)'}">${yld.toFixed(2)}%</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteRental('${r.id}')">삭제</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── 부동산 추가/편집 ──
+function openAddProp() {
+  rePropEditId = null;
+  document.getElementById('propModalTitle').textContent = '🏢 부동산 추가';
+  ['pr-name','pr-addr','pr-memo'].forEach(i=>document.getElementById(i).value='');
+  ['pr-buy','pr-price','pr-area','pr-acqtax','pr-agent','pr-etc','pr-proptax','pr-jongtax'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('pr-buydate').value = fmt(new Date());
+  document.getElementById('pr-type').value = '아파트';
+  document.getElementById('modalProp').classList.add('open');
+}
+function openEditProp(id) {
+  const p = properties.find(x=>x.id===id);
+  if (!p) return;
+  rePropEditId = id;
+  document.getElementById('propModalTitle').textContent = '✏️ 부동산 편집';
+  document.getElementById('pr-name').value    = p.name||'';
+  document.getElementById('pr-addr').value    = p.addr||'';
+  document.getElementById('pr-type').value    = p.type||'아파트';
+  document.getElementById('pr-buy').value     = p.buy||'';
+  document.getElementById('pr-buydate').value = p.buydate||'';
+  document.getElementById('pr-price').value   = p.price||'';
+  document.getElementById('pr-area').value    = p.area||'';
+  document.getElementById('pr-acqtax').value  = p.acqtax||'';
+  document.getElementById('pr-agent').value   = p.agent||'';
+  document.getElementById('pr-etc').value     = p.etc||'';
+  document.getElementById('pr-proptax').value = p.proptax||'';
+  document.getElementById('pr-jongtax').value = p.jongtax||'';
+  document.getElementById('pr-memo').value    = p.memo||'';
+  document.getElementById('modalProp').classList.add('open');
+}
+function saveProp() {
+  const name = document.getElementById('pr-name').value.trim();
+  if (!name) { toast('물건명을 입력하세요','err'); return; }
+  const g = id => parseFloat(document.getElementById(id).value)||0;
+  const obj = {
+    id: rePropEditId || uid(),
+    name, type: document.getElementById('pr-type').value,
+    addr: document.getElementById('pr-addr').value.trim(),
+    buy: g('pr-buy'), buydate: document.getElementById('pr-buydate').value,
+    price: g('pr-price'), area: g('pr-area'),
+    acqtax: g('pr-acqtax'), agent: g('pr-agent'), etc: g('pr-etc'),
+    proptax: g('pr-proptax'), jongtax: g('pr-jongtax'),
+    memo: document.getElementById('pr-memo').value.trim(),
+  };
+  if (rePropEditId) {
+    const idx = properties.findIndex(x=>x.id===rePropEditId);
+    properties[idx] = obj;
+  } else {
+    properties.push(obj);
+  }
+  saveAll();
+  document.getElementById('modalProp').classList.remove('open');
+  renderRealEstate();
+  toast(`${name} ${rePropEditId?'수정':'추가'} 완료`, 'ok');
+}
+function deleteProp(id) {
+  const p = properties.find(x=>x.id===id);
+  if (!p || !confirm(`${p.name}을(를) 삭제할까요?\n관련 임대 내역도 함께 삭제됩니다.`)) return;
+  properties = properties.filter(x=>x.id!==id);
+  rentals    = rentals.filter(r=>r.propId!==id);
+  saveAll(); renderRealEstate();
+  toast(`${p.name} 삭제 완료`, 'ok');
+}
+
+// ── 임대 추가 ──
+function populateRlPropSelect(selectedId) {
+  const sel = document.getElementById('rl-prop');
+  sel.innerHTML = properties.map(p=>`<option value="${p.id}" ${p.id===selectedId?'selected':''}>${p.name}</option>`).join('');
+}
+function openAddRental() {
+  if (!properties.length) { toast('먼저 부동산을 추가하세요','err'); return; }
+  populateRlPropSelect('');
+  ['rl-tenant','rl-memo'].forEach(i=>document.getElementById(i).value='');
+  ['rl-deposit','rl-monthly'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('rl-type').value  = '월세';
+  document.getElementById('rl-start').value = fmt(new Date());
+  document.getElementById('rl-end').value   = '';
+  toggleRentalType();
+  document.getElementById('modalRental').classList.add('open');
+}
+function openAddRentalFor(propId) {
+  openAddRental();
+  populateRlPropSelect(propId);
+}
+function toggleRentalType() {
+  const t = document.getElementById('rl-type').value;
+  document.getElementById('rl-monthly-wrap').style.display = t==='월세' ? '' : 'none';
+}
+function saveRental() {
+  const propId = document.getElementById('rl-prop').value;
+  if (!propId) { toast('물건을 선택하세요','err'); return; }
+  const obj = {
+    id: uid(), propId,
+    type:    document.getElementById('rl-type').value,
+    tenant:  document.getElementById('rl-tenant').value.trim(),
+    deposit: parseFloat(document.getElementById('rl-deposit').value)||0,
+    monthly: parseFloat(document.getElementById('rl-monthly').value)||0,
+    start:   document.getElementById('rl-start').value,
+    end:     document.getElementById('rl-end').value,
+    memo:    document.getElementById('rl-memo').value.trim(),
+  };
+  rentals.push(obj);
+  saveAll();
+  document.getElementById('modalRental').classList.remove('open');
+  renderRealEstate();
+  toast('임대 내역 추가 완료','ok');
+}
+function deleteRental(id) {
+  if (!confirm('임대 내역을 삭제할까요?')) return;
+  rentals = rentals.filter(r=>r.id!==id);
+  saveAll(); renderRentalTable(); renderReSummary();
+  toast('삭제 완료','ok');
+}
+
+// ── 양도세 셀렉트 ──
+function populateTxPropSelect() {
+  const sel = document.getElementById('tx-prop');
+  sel.innerHTML = '<option value="">직접 입력</option>' +
+    properties.map(p=>`<option value="${p.id}">${p.name}</option>`).join('');
+}
+function taxFillFrom(propId) {
+  nav('realestate');
+  setTimeout(() => {
+    const sel = document.getElementById('tx-prop');
+    sel.value = propId;
+    const p = properties.find(x=>x.id===propId);
+    if (p) {
+      document.getElementById('tx-buy').value  = reGross(p);
+      document.getElementById('tx-sell').value = p.price||'';
+      document.getElementById('tx-cost').value = '';
+      // 보유기간 자동
+      const yrs = reHoldYears(p);
+      const holdSel = document.getElementById('tx-hold');
+      holdSel.value = yrs>=2?'2':yrs>=1?'1':'0';
+      taxCalc();
+      document.querySelector('.tax-panel').scrollIntoView({behavior:'smooth'});
+    }
+  }, 100);
+}
+
+// ── 양도소득세 계산 ──
+function taxCalc() {
+  const buy     = parseFloat(document.getElementById('tx-buy').value)||0;
+  const sell    = parseFloat(document.getElementById('tx-sell').value)||0;
+  const cost    = parseFloat(document.getElementById('tx-cost').value)||0;
+  const hold    = document.getElementById('tx-hold').value;
+  const count   = parseInt(document.getElementById('tx-count').value)||1;
+  const adj     = document.getElementById('tx-adj').value==='1';
+  const exempt  = document.getElementById('tx-exempt').value;
+  const ltdcYr  = parseInt(document.getElementById('tx-ltdc').value)||0;
+
+  if (!buy || !sell) {
+    document.getElementById('taxResult').innerHTML = `
+      <div class="tax-result-title">📊 세금 계산 결과</div>
+      <div style="color:var(--text3);font-size:12px;text-align:center;padding:20px 0">
+        취득가액과 양도가액을 입력하면<br>자동 계산됩니다
+      </div>`;
+    return;
+  }
+
+  // 1. 양도차익
+  let gain = sell - buy - cost;
+
+  // 2. 1세대1주택 비과세 처리
+  let exemptAmt = 0;
+  let isFullExempt = false;
+  if (exempt==='1') { isFullExempt = true; }
+  else if (exempt==='2' && sell > 12000) {
+    // 고가주택: 12억 초과분만 과세
+    exemptAmt = gain * (12000 / sell);
+    gain = gain - exemptAmt;
+  }
+
+  // 3. 장기보유특별공제
+  let ltdcRate = 0;
+  if (!isFullExempt && gain > 0) {
+    if (ltdcYr>=15) ltdcRate=0.30;
+    else if (ltdcYr>=10) ltdcRate=0.20;
+    else if (ltdcYr>=5)  ltdcRate=0.10;
+    else if (ltdcYr>=3)  ltdcRate=0.06;
+    // 다주택 조정지역은 장특공제 배제
+    if (count>=2 && adj) ltdcRate = 0;
+  }
+  const ltdcAmt = isFullExempt ? 0 : Math.max(0,gain) * ltdcRate;
+  const taxBase = isFullExempt ? 0 : Math.max(0, gain - ltdcAmt);
+
+  // 4. 기본공제 (250만원)
+  const basicDeduct = isFullExempt ? 0 : Math.min(taxBase, 250);
+  const taxableIncome = Math.max(0, taxBase - basicDeduct);
+
+  // 5. 세율 결정
+  let rate = 0;
+  let rateName = '';
+  if (isFullExempt) {
+    rate = 0; rateName = '비과세';
+  } else if (hold==='0') {
+    // 1년 미만
+    rate = count>=1 ? 0.70 : 0.50;
+    rateName = count>=2&&adj ? '단기중과 70%' : '단기양도 70%';
+  } else if (hold==='1') {
+    rate = count>=2&&adj ? 0.60 : 0.40;
+    rateName = count>=2&&adj ? '중과 60%' : '단기양도 40%';
+  } else {
+    // 2년 이상 - 누진세율
+    if (count>=3 && adj) { rate = 0; rateName = '누진+30%p 중과'; }
+    else if (count>=2 && adj) { rate = 0; rateName = '누진+20%p 중과'; }
+    else { rate = 0; rateName = '누진세율'; }
+  }
+
+  // 누진세율 계산
+  let transferTax = 0;
+  if (!isFullExempt) {
+    if (rate>0) {
+      transferTax = taxableIncome * rate;
+    } else {
+      // 누진세율 (단위: 만원)
+      const brackets = [
+        [1400,0.06],[3400,0.15],[8800,0.24],[15000,0.35],[30000,0.38],[45000,0.40],[100000,0.42],[Infinity,0.45]
+      ];
+      const surcharges = [0,126,576,1544,3594,9594,17394,94394]; // 누진공제
+      let prev=0;
+      for(let i=0;i<brackets.length;i++){
+        if(taxableIncome<=brackets[i][0]){
+          transferTax = taxableIncome*brackets[i][1] - surcharges[i];
+          break;
+        }
+        prev=brackets[i][0];
+      }
+      // 다주택 중과 가산
+      if (count>=3 && adj) transferTax += taxableIncome*0.30;
+      else if (count>=2 && adj) transferTax += taxableIncome*0.20;
+    }
+  }
+
+  const localTax   = transferTax * 0.10;  // 지방소득세 10%
+  const totalTax   = transferTax + localTax;
+  const netProfit  = gain - totalTax;
+  const netPct     = buy ? netProfit/buy*100 : 0;
+  const agentFee   = sell * 0.005; // 중개수수료 추정 0.5%
+
+  document.getElementById('taxResult').innerHTML = `
+    <div class="tax-result-title">📊 세금 계산 결과 <span style="font-size:10px;color:var(--text3);font-weight:400">(2024년 기준 / 참고용)</span></div>
+    <div class="tax-row"><span class="tax-row-label">양도가액</span><span class="tax-row-val">${fmtNum(sell,0)}만원</span></div>
+    <div class="tax-row"><span class="tax-row-label">취득원가 + 필요경비</span><span class="tax-row-val">${fmtNum(buy+cost,0)}만원</span></div>
+    <div class="tax-row"><span class="tax-row-label">양도차익</span><span class="tax-row-val ${gain>=0?'tag-up':'tag-down'}">${fmtNum(gain,0)}만원</span></div>
+    ${exemptAmt>0?`<div class="tax-row"><span class="tax-row-label">비과세 공제 (12억 이하분)</span><span class="tax-row-val" style="color:var(--up)">-${fmtNum(exemptAmt,0)}만원</span></div>`:''}
+    ${ltdcAmt>0?`<div class="tax-row"><span class="tax-row-label">장기보유특별공제 (${(ltdcRate*100).toFixed(0)}%)</span><span class="tax-row-val" style="color:var(--up)">-${fmtNum(ltdcAmt,0)}만원</span></div>`:''}
+    ${!isFullExempt?`<div class="tax-row"><span class="tax-row-label">기본공제</span><span class="tax-row-val" style="color:var(--up)">-${fmtNum(basicDeduct,0)}만원</span></div>`:''}
+    <div class="tax-row"><span class="tax-row-label">과세표준</span><span class="tax-row-val">${fmtNum(taxableIncome,0)}만원</span></div>
+    <div class="tax-row"><span class="tax-row-label">적용세율</span><span class="tax-row-val">${rateName||'누진세율'}</span></div>
+    <div class="tax-row"><span class="tax-row-label">양도소득세</span><span class="tax-row-val" style="color:var(--down)">${fmtNum(transferTax,0)}만원</span></div>
+    <div class="tax-row"><span class="tax-row-label">지방소득세 (10%)</span><span class="tax-row-val" style="color:var(--down)">${fmtNum(localTax,0)}만원</span></div>
+    <div class="tax-row"><span class="tax-row-label">중개수수료 추정 (0.5%)</span><span class="tax-row-val" style="color:var(--down)">${fmtNum(agentFee,0)}만원</span></div>
+    <div class="tax-row"><span class="tax-row-label" style="font-weight:700">총 세금 + 수수료</span><span class="tax-row-val" style="color:var(--down);font-weight:700">${fmtNum(totalTax+agentFee,0)}만원</span></div>
+    <div class="tax-total-row">
+      <span class="tax-total-label">실수령 순이익</span>
+      <span class="tax-total-val ${netProfit>=0?'':'tag-down'}">${netProfit>=0?'+':''}${fmtNum(netProfit,0)}만원 (${netPct.toFixed(1)}%)</span>
+    </div>
+    <div class="tax-warn">※ 본 계산은 참고용이며 실제 세금은 보유 현황·지역·공시가격·임대사업자 등록 여부 등에 따라 달라집니다.<br>정확한 세금은 세무사 상담을 권장합니다.</div>
+  `;
+}
+
+// ── 시세 갱신 (수동 입력 팝업 방식 — API 미지원) ──
+function reFetchAll() {
+  toast('부동산 시세는 네이버 부동산 등에서 확인 후 편집 버튼으로 직접 업데이트 해주세요', 'info');
+}
+
+// ════════════════════════════════════════
 //  AUTH  (SHA-256 via Web Crypto)
 // ════════════════════════════════════════
 async function sha256(str) {
@@ -1815,15 +2620,19 @@ function enterApp(userId) {
   window._pfPrefix = prefix;
 
   // 사용자 데이터 로드 (없으면 샘플)
-  holdings  = load(prefix + 'holdings', sampleHoldings());
-  dailyLogs = load(prefix + 'daily',    sampleDaily());
-  dividends = load(prefix + 'div',      sampleDiv());
+  holdings   = load(prefix + 'holdings',  sampleHoldings());
+  dailyLogs  = load(prefix + 'daily',     sampleDaily());
+  dividends  = load(prefix + 'div',       sampleDiv());
+  properties = load(prefix + 'props',     sampleProps());
+  rentals    = load(prefix + 'rentals',   sampleRentals());
 
   // saveAll 재정의 — 사용자별 키로 저장
   window.saveAll = () => {
-    save(prefix + 'holdings', holdings);
-    save(prefix + 'daily',    dailyLogs);
-    save(prefix + 'div',      dividends);
+    save(prefix + 'holdings',  holdings);
+    save(prefix + 'daily',     dailyLogs);
+    save(prefix + 'div',       dividends);
+    save(prefix + 'props',     properties);
+    save(prefix + 'rentals',   rentals);
   };
 
   // 사이드바 사용자 표시
