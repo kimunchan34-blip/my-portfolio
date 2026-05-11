@@ -472,7 +472,7 @@ tbody tr:hover { background: var(--surface2); }
 .rb-empty    { background:rgba(100,116,139,.12); color:var(--flat); }
 
 /* modal wide */
-.modal-wide .modal-box { max-width:620px; }
+#modalProp .modal { max-width:620px; }
 
 /* ───── SCROLLBAR ───── */
 ::-webkit-scrollbar { width: 5px; }
@@ -1093,8 +1093,8 @@ tbody tr:hover { background: var(--surface2); }
 </div>
 
 <!-- ── MODAL: 부동산 추가/편집 ── -->
-<div class="modal modal-wide" id="modalProp" onclick="closeModal('modalProp',event)">
-  <div class="modal-box">
+<div class="overlay" id="modalProp" onclick="closeModal('modalProp',event)">
+  <div class="modal modal-wide">
     <div class="modal-head">
       <div class="modal-title" id="propModalTitle">🏢 부동산 추가</div>
       <button class="modal-close" onclick="document.getElementById('modalProp').classList.remove('open')">✕</button>
@@ -1167,8 +1167,8 @@ tbody tr:hover { background: var(--surface2); }
 </div>
 
 <!-- ── MODAL: 임대 추가 ── -->
-<div class="modal" id="modalRental" onclick="closeModal('modalRental',event)">
-  <div class="modal-box">
+<div class="overlay" id="modalRental" onclick="closeModal('modalRental',event)">
+  <div class="modal">
     <div class="modal-head">
       <div class="modal-title">🏠 임대 내역 추가</div>
       <button class="modal-close" onclick="document.getElementById('modalRental').classList.remove('open')">✕</button>
