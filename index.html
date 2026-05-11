@@ -372,6 +372,115 @@ tbody tr:hover { background: var(--surface2); }
 .fetch-label { font-size: 11px; color: var(--text2); }
 .last-fetch { font-size: 10px; font-family: var(--mono); color: var(--text3); margin-left: auto; }
 
+/* ───── LOGIN PAGE ───── */
+#loginScreen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn 0.3s ease;
+}
+#loginScreen.hidden { display: none; }
+
+.login-wrap {
+  width: 100%; max-width: 420px; padding: 0 24px;
+}
+.login-logo {
+  text-align: center; margin-bottom: 36px;
+}
+.login-logo-icon {
+  width: 64px; height: 64px; border-radius: 18px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px; margin: 0 auto 14px;
+  box-shadow: 0 8px 32px rgba(59,130,246,0.35);
+}
+.login-title { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+.login-sub { font-size: 12px; color: var(--text3); margin-top: 5px; font-family: var(--mono); letter-spacing: 1px; }
+
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 32px 28px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+.login-tab-row {
+  display: flex; gap: 4px; margin-bottom: 24px;
+  background: var(--surface2); border-radius: 10px; padding: 4px;
+}
+.login-tab {
+  flex: 1; padding: 8px; border: none; border-radius: 7px;
+  font-size: 13px; font-weight: 600; font-family: inherit;
+  cursor: pointer; transition: all 0.15s;
+  background: transparent; color: var(--text3);
+}
+.login-tab.active {
+  background: var(--accent); color: #fff;
+  box-shadow: 0 2px 8px rgba(59,130,246,0.35);
+}
+.login-field { margin-bottom: 14px; }
+.login-field label {
+  display: block; font-size: 11px; font-weight: 600;
+  color: var(--text2); margin-bottom: 6px; letter-spacing: 0.5px;
+}
+.login-input {
+  width: 100%; padding: 12px 14px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text); font-size: 14px;
+  font-family: inherit; outline: none; transition: border-color 0.15s;
+}
+.login-input:focus { border-color: var(--accent); }
+.login-input::placeholder { color: var(--text3); }
+
+.login-btn {
+  width: 100%; padding: 13px; margin-top: 6px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; border-radius: 10px;
+  color: #fff; font-size: 14px; font-weight: 700;
+  font-family: inherit; cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 0 4px 16px rgba(59,130,246,0.3);
+}
+.login-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,0.4); }
+.login-btn:active { transform: translateY(0); }
+
+.login-err {
+  margin-top: 12px; padding: 10px 14px;
+  background: var(--down-dim); border: 1px solid rgba(255,77,109,0.3);
+  border-radius: 8px; color: var(--down); font-size: 12px; font-weight: 600;
+  display: none;
+}
+.login-err.show { display: block; animation: fadeIn 0.2s ease; }
+.login-ok {
+  margin-top: 12px; padding: 10px 14px;
+  background: var(--up-dim); border: 1px solid rgba(0,217,126,0.3);
+  border-radius: 8px; color: var(--up); font-size: 12px; font-weight: 600;
+  display: none;
+}
+.login-ok.show { display: block; }
+.login-hint { font-size: 11px; color: var(--text3); text-align: center; margin-top: 16px; line-height: 1.6; }
+
+/* sidebar user profile */
+.sidebar-user {
+  padding: 12px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.user-avatar {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; color: #fff; flex-shrink: 0;
+}
+.user-name { font-size: 13px; font-weight: 600; }
+.user-role { font-size: 10px; color: var(--text3); }
+.logout-btn {
+  margin-left: auto; background: none; border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text3); font-size: 10px;
+  padding: 4px 8px; cursor: pointer; font-family: inherit;
+  transition: all 0.15s;
+}
+.logout-btn:hover { border-color: var(--down); color: var(--down); }
+
 /* ───── SCROLLBAR ───── */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -396,6 +505,63 @@ tbody tr:hover { background: var(--surface2); }
 </style>
 </head>
 <body>
+
+<!-- ══════════ LOGIN SCREEN ══════════ -->
+<div id="loginScreen">
+  <div class="login-wrap">
+    <div class="login-logo">
+      <div class="login-logo-icon">📈</div>
+      <div class="login-title">MyPortfolio</div>
+      <div class="login-sub">ASSET MANAGEMENT SYSTEM</div>
+    </div>
+    <div class="login-card">
+      <div class="login-tab-row">
+        <button class="login-tab active" id="tabLogin" onclick="switchTab('login')">로그인</button>
+        <button class="login-tab" id="tabRegister" onclick="switchTab('register')">계정 만들기</button>
+      </div>
+
+      <!-- 로그인 폼 -->
+      <div id="formLogin">
+        <div class="login-field">
+          <label>아이디</label>
+          <input class="login-input" id="li-id" type="text" placeholder="아이디를 입력하세요" autocomplete="username"
+            onkeydown="if(event.key==='Enter')document.getElementById('li-pw').focus()">
+        </div>
+        <div class="login-field">
+          <label>비밀번호</label>
+          <input class="login-input" id="li-pw" type="password" placeholder="비밀번호를 입력하세요" autocomplete="current-password"
+            onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <button class="login-btn" onclick="doLogin()">로그인</button>
+        <div class="login-err" id="loginErr"></div>
+      </div>
+
+      <!-- 회원가입 폼 -->
+      <div id="formRegister" style="display:none">
+        <div class="login-field">
+          <label>아이디 *</label>
+          <input class="login-input" id="rg-id" type="text" placeholder="영문·숫자 4~20자"
+            onkeydown="if(event.key==='Enter')document.getElementById('rg-pw').focus()">
+        </div>
+        <div class="login-field">
+          <label>비밀번호 *</label>
+          <input class="login-input" id="rg-pw" type="password" placeholder="8자 이상"
+            onkeydown="if(event.key==='Enter')document.getElementById('rg-pw2').focus()">
+        </div>
+        <div class="login-field">
+          <label>비밀번호 확인 *</label>
+          <input class="login-input" id="rg-pw2" type="password" placeholder="비밀번호 재입력"
+            onkeydown="if(event.key==='Enter')doRegister()">
+        </div>
+        <button class="login-btn" onclick="doRegister()">계정 만들기</button>
+        <div class="login-err" id="registerErr"></div>
+        <div class="login-ok" id="registerOk">✓ 계정이 생성됐습니다! 로그인 해주세요</div>
+      </div>
+
+      <div class="login-hint">로그인 정보는 이 브라우저에만 저장됩니다<br>다른 기기에서는 새로 계정을 만들어 주세요</div>
+    </div>
+  </div>
+</div>
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
@@ -431,6 +597,16 @@ tbody tr:hover { background: var(--surface2); }
   <div class="broker-section">
     <div class="broker-label">증권사별 비중</div>
     <div id="brokerChips"></div>
+  </div>
+
+  <!-- 사용자 정보 -->
+  <div class="sidebar-user">
+    <div class="user-avatar" id="userAvatar">?</div>
+    <div>
+      <div class="user-name" id="userNameLabel">—</div>
+      <div class="user-role">투자자</div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">로그아웃</button>
   </div>
 </aside>
 
@@ -1565,9 +1741,128 @@ function toast(msg, type='info') {
 }
 
 // ════════════════════════════════════════
-//  INIT
+//  AUTH  (SHA-256 via Web Crypto)
 // ════════════════════════════════════════
-renderDashboard();
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function switchTab(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('tabLogin').classList.toggle('active', isLogin);
+  document.getElementById('tabRegister').classList.toggle('active', !isLogin);
+  document.getElementById('formLogin').style.display    = isLogin ? '' : 'none';
+  document.getElementById('formRegister').style.display = isLogin ? 'none' : '';
+  hideAuthMsgs();
+}
+
+function hideAuthMsgs() {
+  ['loginErr','registerErr','registerOk'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove('show'); el.textContent=''; }
+  });
+}
+
+async function doLogin() {
+  const id = document.getElementById('li-id').value.trim();
+  const pw = document.getElementById('li-pw').value;
+  const errEl = document.getElementById('loginErr');
+
+  if (!id || !pw) { errEl.textContent='아이디와 비밀번호를 입력해 주세요'; errEl.classList.add('show'); return; }
+
+  const accounts = JSON.parse(localStorage.getItem('pf_accounts')||'{}');
+  if (!accounts[id]) { errEl.textContent='존재하지 않는 아이디입니다'; errEl.classList.add('show'); return; }
+
+  const hash = await sha256(pw + accounts[id].salt);
+  if (hash !== accounts[id].hash) { errEl.textContent='비밀번호가 올바르지 않습니다'; errEl.classList.add('show'); return; }
+
+  // 세션 저장 (탭 닫으면 만료)
+  sessionStorage.setItem('pf_user', id);
+  enterApp(id);
+}
+
+async function doRegister() {
+  const id   = document.getElementById('rg-id').value.trim();
+  const pw   = document.getElementById('rg-pw').value;
+  const pw2  = document.getElementById('rg-pw2').value;
+  const errEl = document.getElementById('registerErr');
+  const okEl  = document.getElementById('registerOk');
+  errEl.classList.remove('show'); okEl.classList.remove('show');
+
+  if (!id || !pw) { errEl.textContent='아이디와 비밀번호를 입력해 주세요'; errEl.classList.add('show'); return; }
+  if (!/^[a-zA-Z0-9가-힣]{2,20}$/.test(id)) { errEl.textContent='아이디: 영문·숫자·한글 2~20자'; errEl.classList.add('show'); return; }
+  if (pw.length < 8) { errEl.textContent='비밀번호는 8자 이상이어야 합니다'; errEl.classList.add('show'); return; }
+  if (pw !== pw2)    { errEl.textContent='비밀번호가 일치하지 않습니다'; errEl.classList.add('show'); return; }
+
+  const accounts = JSON.parse(localStorage.getItem('pf_accounts')||'{}');
+  if (accounts[id]) { errEl.textContent='이미 사용 중인 아이디입니다'; errEl.classList.add('show'); return; }
+
+  const salt = Math.random().toString(36).slice(2);
+  const hash = await sha256(pw + salt);
+  accounts[id] = { hash, salt, created: new Date().toISOString() };
+  localStorage.setItem('pf_accounts', JSON.stringify(accounts));
+
+  okEl.classList.add('show');
+  ['rg-id','rg-pw','rg-pw2'].forEach(i => document.getElementById(i).value='');
+  setTimeout(() => switchTab('login'), 1500);
+}
+
+function enterApp(userId) {
+  document.getElementById('loginScreen').classList.add('hidden');
+  // 사용자별 데이터 키 분리
+  const prefix = 'pf_' + userId + '_';
+  window._pfPrefix = prefix;
+
+  // 사용자 데이터 로드 (없으면 샘플)
+  holdings  = load(prefix + 'holdings', sampleHoldings());
+  dailyLogs = load(prefix + 'daily',    sampleDaily());
+  dividends = load(prefix + 'div',      sampleDiv());
+
+  // saveAll 재정의 — 사용자별 키로 저장
+  window.saveAll = () => {
+    save(prefix + 'holdings', holdings);
+    save(prefix + 'daily',    dailyLogs);
+    save(prefix + 'div',      dividends);
+  };
+
+  // 사이드바 사용자 표시
+  const avatar = document.getElementById('userAvatar');
+  const label  = document.getElementById('userNameLabel');
+  if (avatar) avatar.textContent = userId[0].toUpperCase();
+  if (label)  label.textContent  = userId;
+
+  renderDashboard();
+}
+
+function doLogout() {
+  if (!confirm('로그아웃 하시겠습니까?')) return;
+  sessionStorage.removeItem('pf_user');
+  // 로그인 화면 초기화
+  ['li-id','li-pw'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  hideAuthMsgs();
+  switchTab('login');
+  document.getElementById('loginScreen').classList.remove('hidden');
+}
+
+// ════════════════════════════════════════
+//  INIT  — 세션 확인 후 분기
+// ════════════════════════════════════════
+(function init() {
+  const savedUser = sessionStorage.getItem('pf_user');
+  if (savedUser) {
+    // 계정이 실제로 존재하는지 확인
+    const accounts = JSON.parse(localStorage.getItem('pf_accounts')||'{}');
+    if (accounts[savedUser]) {
+      enterApp(savedUser);
+      return;
+    }
+    sessionStorage.removeItem('pf_user');
+  }
+  // 계정이 하나도 없으면 회원가입 탭으로 유도
+  const accounts = JSON.parse(localStorage.getItem('pf_accounts')||'{}');
+  if (Object.keys(accounts).length === 0) switchTab('register');
+})();
 </script>
 </body>
 </html>
