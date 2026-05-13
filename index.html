@@ -1245,12 +1245,21 @@ tbody tr:hover { background: var(--surface2); }
     </div>
   </div>
 
-  <!-- API Key 배너 (미설정시) -->
+  <!-- API Key 입력 배너 -->
   <div class="ai-key-banner" id="aiKeyBanner">
     <span style="font-size:18px">🔑</span>
     <div style="flex:1;min-width:0">
-      <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:4px">Firebase Functions 배포 후 Claude API Key 설정 필요</div>
-      <div style="font-size:11px;color:var(--text3)">아래 설정 가이드를 따라 배포하면 이 배너가 사라집니다</div>
+      <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:6px">Claude API Key 입력 (브라우저 직접 연결)</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input class="ai-key-input" id="claudeApiKeyInput" type="password"
+          placeholder="sk-ant-api03-..."
+          oninput="onApiKeyInput(this.value)">
+        <button class="btn btn-ghost btn-sm" id="aiKeySaveBtn" onclick="saveApiKey()" disabled>저장</button>
+        <span id="aiKeyStatus" style="font-size:11px;color:var(--text3)"></span>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:5px">
+        키는 이 브라우저에만 저장됩니다 · <a href="https://console.anthropic.com/keys" target="_blank" style="color:var(--accent)">API 키 발급 →</a>
+      </div>
     </div>
     <button class="btn btn-ghost btn-sm" onclick="document.getElementById('aiKeyBanner').style.display='none'">닫기</button>
   </div>
@@ -2806,17 +2815,46 @@ function reFetchAll() {
 }
 
 // ════════════════════════════════════════
-//  AI CHATBOT  (Firebase Functions 프록시)
+//  AI CHATBOT  (브라우저 직접 / Firebase Functions 프록시 겸용)
 // ════════════════════════════════════════
-let _chatHistory  = [];   // { role, content }
-let _aiThinking   = false;
-let _claudeFn     = null; // Firebase callable function
+let _chatHistory = [];
+let _aiThinking  = false;
+let _claudeApiKey = '';
+
+const CLAUDE_CHAT_MODEL = 'claude-sonnet-4-20250514';
+
+// ── API 키 관리 ──
+function onApiKeyInput(val) {
+  const btn = document.getElementById('aiKeySaveBtn');
+  if (btn) btn.disabled = !val.startsWith('sk-ant-');
+}
+
+function saveApiKey() {
+  const val = document.getElementById('claudeApiKeyInput')?.value.trim();
+  if (!val) return;
+  _claudeApiKey = val;
+  try { localStorage.setItem('claude_api_key', val); } catch(e){}
+  const st = document.getElementById('aiKeyStatus');
+  if (st) { st.textContent = '✓ 저장됨'; st.style.color = 'var(--up)'; }
+  toast('Claude API 키 저장 완료 — 이제 AI 분석을 사용할 수 있습니다', 'ok');
+}
 
 function initAiPage() {
-  // Firebase Functions callable 초기화
-  if (!_claudeFn && _fbReady && firebase.functions) {
-    const fn = firebase.app().functions('asia-northeast3');
-    _claudeFn = fn.httpsCallable('claudeProxy');
+  // 저장된 API 키 복원
+  if (!_claudeApiKey) {
+    try {
+      const saved = localStorage.getItem('claude_api_key') || '';
+      if (saved) {
+        _claudeApiKey = saved;
+        const inp = document.getElementById('claudeApiKeyInput');
+        if (inp) inp.value = saved;
+        const st = document.getElementById('aiKeyStatus');
+        if (st) { st.textContent = '✓ 저장됨'; st.style.color = 'var(--up)'; }
+        // 키가 있으면 배너 접기
+        const banner = document.getElementById('aiKeyBanner');
+        if (banner) banner.style.display = 'none';
+      }
+    } catch(e){}
   }
   renderChatMessages();
 }
@@ -2829,42 +2867,37 @@ function buildPortfolioContext() {
   const pnlPct    = totalCost ? (totalPnl/totalCost*100).toFixed(2) : 0;
 
   const holdingLines = holdings.map(h => {
-    const val  = h.qty * h.price;
-    const pnl  = h.qty * (h.price - h.avg);
-    const pct  = h.avg ? ((h.price-h.avg)/h.avg*100).toFixed(1) : 0;
-    const wt   = totalVal ? (val/totalVal*100).toFixed(1) : 0;
+    const val = h.qty*h.price, pnl = h.qty*(h.price-h.avg);
+    const pct = h.avg ? ((h.price-h.avg)/h.avg*100).toFixed(1) : 0;
+    const wt  = totalVal ? (val/totalVal*100).toFixed(1) : 0;
     return `  - ${h.name}(${h.ticker}) | ${h.market} | ${h.broker} | 수량:${h.qty} | 매입가:${h.avg} | 현재가:${h.price} | 평가액:${Math.round(val).toLocaleString()} | 손익:${pnl>=0?'+':''}${Math.round(pnl).toLocaleString()}(${pct}%) | 비중:${wt}%`;
   }).join('\n');
 
   const propLines = properties.map(p => {
     const cost = (p.buy||0)+(p.acqtax||0)+(p.agent||0)+(p.etc||0);
-    const pnl  = (p.price||0) - cost;
-    const pct  = cost ? (pnl/cost*100).toFixed(1) : 0;
-    const rs   = rentals.filter(r=>r.propId===p.id && r.type!=='공실');
+    const pnl  = (p.price||0)-cost;
+    const pct  = cost?(pnl/cost*100).toFixed(1):0;
+    const rs   = rentals.filter(r=>r.propId===p.id&&r.type!=='공실');
     const ann  = rs.reduce((s,r)=>s+(r.type==='월세'?(r.monthly||0)*12:(r.deposit||0)*0.035),0);
-    const yld  = p.price ? (ann/p.price*100).toFixed(2) : 0;
-    return `  - ${p.name} | ${p.type} | 취득원가:${cost.toLocaleString()}만 | 현재시세:${(p.price||0).toLocaleString()}만 | 손익:${pnl>=0?'+':''}${pnl.toLocaleString()}만(${pct}%) | 임대수익률:${yld}%`;
+    const yld  = p.price?(ann/p.price*100).toFixed(2):0;
+    return `  - ${p.name}|${p.type}|취득원가:${cost.toLocaleString()}만|시세:${(p.price||0).toLocaleString()}만|손익:${pnl>=0?'+':''}${pnl.toLocaleString()}만(${pct}%)|임대수익률:${yld}%`;
   }).join('\n');
 
-  const totalReVal  = properties.reduce((s,p)=>s+(p.price||0),0);
-  const annRental   = rentals.filter(r=>r.type!=='공실').reduce((s,r)=>s+(r.type==='월세'?(r.monthly||0)*12:(r.deposit||0)*0.035),0);
+  const annRental = rentals.filter(r=>r.type!=='공실')
+    .reduce((s,r)=>s+(r.type==='월세'?(r.monthly||0)*12:(r.deposit||0)*0.035),0);
 
-  return `
-[포트폴리오 현황 — ${new Date().toLocaleDateString('ko-KR')} 기준]
+  return `[포트폴리오 현황 — ${new Date().toLocaleDateString('ko-KR')} 기준]
 
-■ 주식/ETF 포트폴리오
-총 평가금액: ${totalVal.toLocaleString()} | 총 손익: ${totalPnl>=0?'+':''}${Math.round(totalPnl).toLocaleString()} (${pnlPct}%)
-보유 종목 수: ${holdings.length}개
-${holdingLines || '  (보유 종목 없음)'}
+■ 주식/ETF (${holdings.length}종목)
+총평가: ${Math.round(totalVal).toLocaleString()} | 총손익: ${totalPnl>=0?'+':''}${Math.round(totalPnl).toLocaleString()} (${pnlPct}%)
+${holdingLines||'  (없음)'}
 
-■ 부동산 포트폴리오
-총 자산가치: ${totalReVal.toLocaleString()}만원 | 연간 임대수익: ${annRental.toLocaleString()}만원
-보유 건수: ${properties.length}건
-${propLines || '  (보유 부동산 없음)'}
+■ 부동산 (${properties.length}건)
+연간임대수익: ${annRental.toLocaleString()}만원
+${propLines||'  (없음)'}
 
-■ 최근 일별 손익 (최근 5개)
-${dailyLogs.slice(-5).map(d=>`  - ${d.date}: ${d.holdingId||'전체'} ${d.close>=0?'+':''}${(d.close||0).toLocaleString()}`).join('\n') || '  (기록 없음)'}
-`.trim();
+■ 최근 손익 기록
+${dailyLogs.slice(-5).map(d=>`  - ${d.date}: ${d.close>=0?'+':''}${(d.close||0).toLocaleString()}`).join('\n')||'  (없음)'}`.trim();
 }
 
 // ── 메시지 렌더 ──
@@ -2872,25 +2905,18 @@ function renderChatMessages() {
   const container = document.getElementById('chatMessages');
   const empty     = document.getElementById('chatEmpty');
   if (!container) return;
-
+  const msgs = container.querySelectorAll('.chat-msg');
+  msgs.forEach(e=>e.remove());
   if (!_chatHistory.length) {
-    if (empty) empty.style.display = 'flex';
-    const existing = container.querySelectorAll('.chat-msg');
-    existing.forEach(e => e.remove());
+    if (empty) empty.style.display='flex';
     return;
   }
-  if (empty) empty.style.display = 'none';
-
-  // 전체 재렌더 (메시지 누적)
-  const existing = container.querySelectorAll('.chat-msg');
-  existing.forEach(e => e.remove());
-
-  _chatHistory.forEach(msg => {
-    const isUser = msg.role === 'user';
+  if (empty) empty.style.display='none';
+  _chatHistory.forEach(msg=>{
+    const isUser = msg.role==='user';
     const div = document.createElement('div');
-    div.className = `chat-msg ${isUser ? 'user' : 'ai'}`;
-    div.innerHTML = `
-      <div class="chat-avatar">${isUser ? '👤' : '🤖'}</div>
+    div.className = `chat-msg ${isUser?'user':'ai'}`;
+    div.innerHTML = `<div class="chat-avatar">${isUser?'👤':'🤖'}</div>
       <div class="chat-bubble${msg.loading?' loading':''}">${formatAiText(msg.content)}</div>`;
     container.appendChild(div);
   });
@@ -2898,12 +2924,12 @@ function renderChatMessages() {
 }
 
 function formatAiText(text) {
-  // 마크다운 기본 변환
   return text
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/^#{1,3}\s(.+)$/gm, '<strong style="display:block;margin:8px 0 4px;color:var(--text)">$1</strong>')
-    .replace(/^[-•]\s(.+)$/gm, '<span class="bullet">• $1</span>')
-    .replace(/\n/g, '<br>');
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/^#{1,3}\s(.+)$/gm,'<strong style="display:block;margin:8px 0 4px;font-size:13px">$1</strong>')
+    .replace(/^[-•]\s(.+)$/gm,'<span class="bullet">• $1</span>')
+    .replace(/\n/g,'<br>');
 }
 
 // ── 전송 ──
@@ -2912,48 +2938,67 @@ async function sendChat() {
   const text  = input?.value.trim();
   if (!text || _aiThinking) return;
 
-  // 사용자 메시지 추가
-  _chatHistory.push({ role: 'user', content: text });
-  input.value = '';
-  input.style.height = 'auto';
+  if (!_claudeApiKey) {
+    toast('먼저 Claude API 키를 입력해 주세요', 'err');
+    document.getElementById('aiKeyBanner').style.display='flex';
+    document.getElementById('claudeApiKeyInput')?.focus();
+    return;
+  }
 
-  // AI 로딩 메시지
-  _chatHistory.push({ role: 'assistant', content: '분석 중...', loading: true });
+  _chatHistory.push({ role:'user', content:text });
+  input.value=''; input.style.height='auto';
+  _chatHistory.push({ role:'assistant', content:'분석 중... ✨', loading:true });
   renderChatMessages();
   _aiThinking = true;
   document.getElementById('chatSendBtn').disabled = true;
 
+  const systemPrompt = `당신은 전문 포트폴리오 투자 분석 어시스턴트입니다. 아래 사용자의 실제 포트폴리오 데이터를 바탕으로 구체적이고 실용적인 분석을 한국어로 제공하세요. 투자는 원금 손실 위험이 있으므로 분석은 참고용임을 명심하세요.\n\n${buildPortfolioContext()}`;
+
+  // 히스토리에서 로딩 메시지 제외, role 정리
+  const messages = _chatHistory
+    .filter(m=>!m.loading)
+    .slice(0,-0) // 마지막 로딩 포함 안됨 (이미 filter로 제거)
+    .map(m=>({ role:m.role, content:m.content }));
+  // 마지막 로딩 없애고 전송용 messages 재구성
+  const sendMessages = _chatHistory
+    .filter(m=>!m.loading)
+    .map(m=>({ role:m.role, content:m.content }));
+
   try {
-    const portfolioCtx = buildPortfolioContext();
-    const systemPrompt = `당신은 전문 포트폴리오 투자 분석 어시스턴트입니다.
-아래는 사용자의 실제 포트폴리오 현황입니다. 이 데이터를 기반으로 구체적이고 실용적인 분석과 조언을 한국어로 제공하세요.
-금융 투자는 원금 손실 위험이 있으므로 분석은 참고용임을 항상 명심하세요.
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type':              'application/json',
+        'x-api-key':                 _claudeApiKey,
+        'anthropic-version':         '2023-06-01',
+        'anthropic-dangerous-allow-browser': 'true',
+      },
+      body: JSON.stringify({
+        model:      CLAUDE_CHAT_MODEL,
+        max_tokens: 2048,
+        system:     systemPrompt,
+        messages:   sendMessages,
+      }),
+    });
 
-${portfolioCtx}`;
+    const data = await res.json();
 
-    // Firebase Functions 호출 or 직접 API 호출(오프라인 모드)
-    let replyText = '';
-    if (_claudeFn) {
-      const messages = _chatHistory
-        .filter(m => !m.loading)
-        .slice(0, -1)  // 마지막 로딩 제외
-        .map(m => ({ role: m.role, content: m.content }));
-      const res  = await _claudeFn({ messages, systemPrompt });
-      replyText  = res.data?.content || '응답을 받지 못했습니다.';
+    _chatHistory.pop(); // 로딩 제거
+
+    if (!res.ok) {
+      const errMsg = data.error?.message || `HTTP ${res.status}`;
+      const friendly = res.status===401 ? 'API 키가 올바르지 않습니다. 다시 확인해 주세요.'
+                     : res.status===429 ? 'API 호출 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.'
+                     : `API 오류: ${errMsg}`;
+      _chatHistory.push({ role:'assistant', content:`❌ ${friendly}` });
     } else {
-      replyText = '⚠️ Firebase Functions가 배포되지 않았습니다.\n아래 설정 가이드를 따라 배포해 주세요.';
+      const reply = data.content?.[0]?.text || '응답을 받지 못했습니다.';
+      _chatHistory.push({ role:'assistant', content:reply });
     }
 
-    // 로딩 제거 후 실제 응답 삽입
+  } catch(e) {
     _chatHistory.pop();
-    _chatHistory.push({ role: 'assistant', content: replyText });
-
-  } catch (e) {
-    _chatHistory.pop();
-    const errMsg = e.code === 'functions/unauthenticated' ? '로그인 후 사용 가능합니다.'
-                 : e.code === 'functions/failed-precondition' ? 'Claude API 키가 서버에 설정되지 않았습니다.\n배포 가이드를 확인해 주세요.'
-                 : `오류: ${e.message}`;
-    _chatHistory.push({ role: 'assistant', content: `❌ ${errMsg}` });
+    _chatHistory.push({ role:'assistant', content:`❌ 네트워크 오류: ${e.message}\nCORS 이슈가 발생한 경우 Firebase Functions 프록시 배포가 필요합니다.` });
   }
 
   _aiThinking = false;
@@ -2963,18 +3008,18 @@ ${portfolioCtx}`;
 
 function quickAsk(text) {
   const input = document.getElementById('chatInput');
-  if (input) { input.value = text; sendChat(); }
+  if (input) { input.value=text; sendChat(); }
 }
 
 function clearChat() {
   if (_chatHistory.length && !confirm('대화 내역을 초기화할까요?')) return;
-  _chatHistory = [];
+  _chatHistory=[];
   renderChatMessages();
 }
 
 function autoResize(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  el.style.height='auto';
+  el.style.height=Math.min(el.scrollHeight,120)+'px';
 }
 
 // ════════════════════════════════════════
