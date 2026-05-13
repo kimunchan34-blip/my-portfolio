@@ -1250,16 +1250,16 @@ tbody tr:hover { background: var(--surface2); }
   <div class="ai-key-banner" id="aiKeyBanner">
     <span style="font-size:18px">🔑</span>
     <div style="flex:1;min-width:0">
-      <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:6px">Claude API Key 입력 (브라우저 직접 연결)</div>
+      <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:6px">P-GPT API Key 입력 (포스코 사내 GPT)</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <input class="ai-key-input" id="claudeApiKeyInput" type="password"
-          placeholder="sk-ant-api03-..."
+          placeholder="b33157c5-bd11-..."
           oninput="onApiKeyInput(this.value)">
         <button class="btn btn-ghost btn-sm" id="aiKeySaveBtn" onclick="saveApiKey()" disabled>저장</button>
         <span id="aiKeyStatus" style="font-size:11px;color:var(--text3)"></span>
       </div>
       <div style="font-size:10px;color:var(--text3);margin-top:5px">
-        키는 이 브라우저에만 저장됩니다 · <a href="https://console.anthropic.com/keys" target="_blank" style="color:var(--accent)">API 키 발급 →</a>
+        companyCode: <strong style="color:var(--text2)">02</strong> &nbsp;·&nbsp; systemCode: <strong style="color:var(--text2)">kuc</strong> &nbsp;·&nbsp; 키는 이 브라우저에만 저장됩니다
       </div>
     </div>
     <button class="btn btn-ghost btn-sm" onclick="document.getElementById('aiKeyBanner').style.display='none'">닫기</button>
@@ -2816,42 +2816,53 @@ function reFetchAll() {
 }
 
 // ════════════════════════════════════════
-//  AI CHATBOT  (브라우저 직접 / Firebase Functions 프록시 겸용)
+//  AI CHATBOT  (P-GPT / POSCO 사내 API)
 // ════════════════════════════════════════
 let _chatHistory = [];
 let _aiThinking  = false;
 let _claudeApiKey = '';
 
-const CLAUDE_CHAT_MODEL = 'claude-sonnet-4-20250514';
+// P-GPT 고정 설정
+const PGPT_BASE_URL   = 'https://aigpt.posco.net/gpgpta01-gpt/';
+const PGPT_COMPANY    = '02';
+const PGPT_SYSTEM     = 'kuc';
+const PGPT_MODEL      = 'claude-sonnet-4-5';  // P-GPT에서 사용 가능한 Claude 모델
 
 // ── API 키 관리 ──
 function onApiKeyInput(val) {
   const btn = document.getElementById('aiKeySaveBtn');
-  if (btn) btn.disabled = !val.startsWith('sk-ant-');
+  if (btn) btn.disabled = !val || val.length < 10;
 }
 
 function saveApiKey() {
   const val = document.getElementById('claudeApiKeyInput')?.value.trim();
   if (!val) return;
   _claudeApiKey = val;
-  try { localStorage.setItem('claude_api_key', val); } catch(e){}
+  try { localStorage.setItem('pgpt_api_key', val); } catch(e){}
   const st = document.getElementById('aiKeyStatus');
   if (st) { st.textContent = '✓ 저장됨'; st.style.color = 'var(--up)'; }
-  toast('Claude API 키 저장 완료 — 이제 AI 분석을 사용할 수 있습니다', 'ok');
+  toast('P-GPT API 키 저장 완료', 'ok');
+}
+
+function showApiKeyBanner() {
+  const banner = document.getElementById('aiKeyBanner');
+  const inp    = document.getElementById('claudeApiKeyInput');
+  if (banner) banner.style.display = 'flex';
+  if (inp)    { inp.value = ''; inp.focus(); }
+  const st = document.getElementById('aiKeyStatus');
+  if (st) st.textContent = '';
 }
 
 function initAiPage() {
-  // 저장된 API 키 복원
   if (!_claudeApiKey) {
     try {
-      const saved = localStorage.getItem('claude_api_key') || '';
+      const saved = localStorage.getItem('pgpt_api_key') || '';
       if (saved) {
         _claudeApiKey = saved;
         const inp = document.getElementById('claudeApiKeyInput');
         if (inp) inp.value = saved;
         const st = document.getElementById('aiKeyStatus');
         if (st) { st.textContent = '✓ 저장됨'; st.style.color = 'var(--up)'; }
-        // 키가 있으면 배너 접기
         const banner = document.getElementById('aiKeyBanner');
         if (banner) banner.style.display = 'none';
       }
@@ -2965,75 +2976,37 @@ async function sendChat() {
     .filter(m=>!m.loading)
     .map(m=>({ role:m.role, content:m.content }));
 
-  const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
-  const PROXY1 = 'https://corsproxy.io/?' + encodeURIComponent(ANTHROPIC_URL);
-  const PROXY2 = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(ANTHROPIC_URL);
+  const endpoint = PGPT_BASE_URL + 'v1/messages';
 
   const body = JSON.stringify({
-    model:      CLAUDE_CHAT_MODEL,
+    model:      PGPT_MODEL,
     max_tokens: 2048,
     system:     systemPrompt,
     messages:   sendMessages,
   });
 
-  const headers = {
-    'Content-Type':      'application/json',
-    'x-api-key':         _claudeApiKey,
-    'anthropic-version': '2023-06-01',
-    'anthropic-dangerous-allow-browser': 'true',
-  };
-
-  // 직접 호출 → proxy1 → proxy2 순으로 시도
-  async function tryFetch(url, useProxy) {
-    const h = useProxy
-      ? { 'Content-Type': 'application/json' }  // 프록시는 커스텀 헤더 일부 차단
-      : headers;
-    // 프록시 사용 시 헤더를 body에 포함 (allorigins 방식)
-    const b = useProxy
-      ? JSON.stringify({ model: CLAUDE_CHAT_MODEL, max_tokens: 2048, system: systemPrompt, messages: sendMessages,
-          _headers: { 'x-api-key': _claudeApiKey, 'anthropic-version': '2023-06-01' } })
-      : body;
-    return fetch(url, { method: 'POST', headers: h, body: useProxy ? body : b });
-  }
-
-  // corsproxy.io는 요청 헤더를 그대로 전달하므로 직접 사용 가능
-  async function callWithProxy(proxyUrl) {
-    return fetch(proxyUrl, {
+  try {
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type':      'application/json',
         'x-api-key':         _claudeApiKey,
         'anthropic-version': '2023-06-01',
+        'x-company-code':    PGPT_COMPANY,
+        'x-system-code':     PGPT_SYSTEM,
       },
       body,
     });
-  }
 
-  try {
-    let res, data;
-
-    // 1차: 직접 호출
-    try {
-      res = await fetch(ANTHROPIC_URL, { method:'POST', headers, body,
-        signal: AbortSignal.timeout(15000) });
-    } catch(e1) {
-      // 2차: corsproxy.io
-      try {
-        res = await callWithProxy(PROXY1);
-      } catch(e2) {
-        // 3차: allorigins
-        res = await callWithProxy(PROXY2);
-      }
-    }
-
-    data = await res.json();
+    const data = await res.json();
     _chatHistory.pop();
 
     if (!res.ok) {
-      const errMsg = data.error?.message || `HTTP ${res.status}`;
-      const friendly = res.status===401 ? 'API 키가 올바르지 않습니다. 키를 다시 확인해 주세요.'
-                     : res.status===429 ? '호출 한도 초과. 잠시 후 다시 시도해 주세요.'
-                     : `API 오류: ${errMsg}`;
+      const errMsg = data.error?.message || data.message || `HTTP ${res.status}`;
+      const friendly = res.status === 401 ? 'API 키가 올바르지 않습니다. P-GPT 키를 다시 확인해 주세요.'
+                     : res.status === 403 ? '접근 권한이 없습니다. companyCode/systemCode를 확인해 주세요.'
+                     : res.status === 429 ? '호출 한도 초과. 잠시 후 다시 시도해 주세요.'
+                     : `API 오류 (${res.status}): ${errMsg}`;
       _chatHistory.push({ role:'assistant', content:`❌ ${friendly}` });
     } else {
       const reply = data.content?.[0]?.text || '응답을 받지 못했습니다.';
@@ -3043,7 +3016,7 @@ async function sendChat() {
   } catch(e) {
     _chatHistory.pop();
     _chatHistory.push({ role:'assistant',
-      content:`❌ 모든 연결 방법이 실패했습니다.\n오류: ${e.message}\n\n네트워크 연결을 확인하거나 잠시 후 다시 시도해 주세요.` });
+      content:`❌ 연결 오류: ${e.message}\n\n확인 사항:\n• 사내 네트워크(VPN 또는 사무실) 접속 여부\n• aigpt.posco.net 접근 가능 여부` });
   }
 
   _aiThinking = false;
