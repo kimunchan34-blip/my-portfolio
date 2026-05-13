@@ -2964,31 +2964,74 @@ async function sendChat() {
     .filter(m=>!m.loading)
     .map(m=>({ role:m.role, content:m.content }));
 
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+  const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
+  const PROXY1 = 'https://corsproxy.io/?' + encodeURIComponent(ANTHROPIC_URL);
+  const PROXY2 = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(ANTHROPIC_URL);
+
+  const body = JSON.stringify({
+    model:      CLAUDE_CHAT_MODEL,
+    max_tokens: 2048,
+    system:     systemPrompt,
+    messages:   sendMessages,
+  });
+
+  const headers = {
+    'Content-Type':      'application/json',
+    'x-api-key':         _claudeApiKey,
+    'anthropic-version': '2023-06-01',
+    'anthropic-dangerous-allow-browser': 'true',
+  };
+
+  // 직접 호출 → proxy1 → proxy2 순으로 시도
+  async function tryFetch(url, useProxy) {
+    const h = useProxy
+      ? { 'Content-Type': 'application/json' }  // 프록시는 커스텀 헤더 일부 차단
+      : headers;
+    // 프록시 사용 시 헤더를 body에 포함 (allorigins 방식)
+    const b = useProxy
+      ? JSON.stringify({ model: CLAUDE_CHAT_MODEL, max_tokens: 2048, system: systemPrompt, messages: sendMessages,
+          _headers: { 'x-api-key': _claudeApiKey, 'anthropic-version': '2023-06-01' } })
+      : body;
+    return fetch(url, { method: 'POST', headers: h, body: useProxy ? body : b });
+  }
+
+  // corsproxy.io는 요청 헤더를 그대로 전달하므로 직접 사용 가능
+  async function callWithProxy(proxyUrl) {
+    return fetch(proxyUrl, {
       method: 'POST',
       headers: {
-        'Content-Type':              'application/json',
-        'x-api-key':                 _claudeApiKey,
-        'anthropic-version':         '2023-06-01',
-        'anthropic-dangerous-allow-browser': 'true',
+        'Content-Type':      'application/json',
+        'x-api-key':         _claudeApiKey,
+        'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify({
-        model:      CLAUDE_CHAT_MODEL,
-        max_tokens: 2048,
-        system:     systemPrompt,
-        messages:   sendMessages,
-      }),
+      body,
     });
+  }
 
-    const data = await res.json();
+  try {
+    let res, data;
 
-    _chatHistory.pop(); // 로딩 제거
+    // 1차: 직접 호출
+    try {
+      res = await fetch(ANTHROPIC_URL, { method:'POST', headers, body,
+        signal: AbortSignal.timeout(15000) });
+    } catch(e1) {
+      // 2차: corsproxy.io
+      try {
+        res = await callWithProxy(PROXY1);
+      } catch(e2) {
+        // 3차: allorigins
+        res = await callWithProxy(PROXY2);
+      }
+    }
+
+    data = await res.json();
+    _chatHistory.pop();
 
     if (!res.ok) {
       const errMsg = data.error?.message || `HTTP ${res.status}`;
-      const friendly = res.status===401 ? 'API 키가 올바르지 않습니다. 다시 확인해 주세요.'
-                     : res.status===429 ? 'API 호출 한도를 초과했습니다. 잠시 후 다시 시도해 주세요.'
+      const friendly = res.status===401 ? 'API 키가 올바르지 않습니다. 키를 다시 확인해 주세요.'
+                     : res.status===429 ? '호출 한도 초과. 잠시 후 다시 시도해 주세요.'
                      : `API 오류: ${errMsg}`;
       _chatHistory.push({ role:'assistant', content:`❌ ${friendly}` });
     } else {
@@ -2998,10 +3041,8 @@ async function sendChat() {
 
   } catch(e) {
     _chatHistory.pop();
-    const isCors = e.name==='TypeError' || e.message?.includes('fetch') || e.message?.includes('NetworkError');
-    _chatHistory.push({ role:'assistant', content: isCors
-      ? `❌ CORS 오류 — 로컬 파일(file://)에서는 외부 API 호출이 차단됩니다.\n\n✅ 해결방법: Firebase Hosting 배포 (무료)\n\n터미널에서 순서대로 실행:\n① npm install -g firebase-tools\n② firebase login\n③ firebase deploy --only hosting\n\n완료 후 https://portfolio-d527f.web.app 으로 접속하세요.`
-      : `❌ 네트워크 오류: ${e.message}` });
+    _chatHistory.push({ role:'assistant',
+      content:`❌ 모든 연결 방법이 실패했습니다.\n오류: ${e.message}\n\n네트워크 연결을 확인하거나 잠시 후 다시 시도해 주세요.` });
   }
 
   _aiThinking = false;
