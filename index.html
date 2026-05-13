@@ -2998,7 +2998,10 @@ async function sendChat() {
 
   } catch(e) {
     _chatHistory.pop();
-    _chatHistory.push({ role:'assistant', content:`❌ 네트워크 오류: ${e.message}\nCORS 이슈가 발생한 경우 Firebase Functions 프록시 배포가 필요합니다.` });
+    const isCors = e.name==='TypeError' || e.message?.includes('fetch') || e.message?.includes('NetworkError');
+    _chatHistory.push({ role:'assistant', content: isCors
+      ? `❌ CORS 오류 — 로컬 파일(file://)에서는 외부 API 호출이 차단됩니다.\n\n✅ 해결방법: Firebase Hosting 배포 (무료)\n\n터미널에서 순서대로 실행:\n① npm install -g firebase-tools\n② firebase login\n③ firebase deploy --only hosting\n\n완료 후 https://portfolio-d527f.web.app 으로 접속하세요.`
+      : `❌ 네트워크 오류: ${e.message}` });
   }
 
   _aiThinking = false;
