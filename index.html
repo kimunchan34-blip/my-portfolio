@@ -9,6 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
 <style>
 :root {
   --bg: #080b12;
@@ -576,6 +577,106 @@ tbody tr:hover { background: var(--surface2); }
 }
 .logout-btn:hover { border-color:var(--down); color:var(--down); }
 
+/* ───── AI CHATBOT ───── */
+#page-ai { display:none; flex-direction:column; height:calc(100vh - 56px); }
+#page-ai.active { display:flex; }
+
+.chat-wrap {
+  flex:1; display:flex; flex-direction:column; min-height:0;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:16px; overflow:hidden;
+}
+.chat-messages {
+  flex:1; overflow-y:auto; padding:20px;
+  display:flex; flex-direction:column; gap:14px;
+  scroll-behavior:smooth;
+}
+.chat-msg { display:flex; gap:10px; align-items:flex-start; max-width:85%; }
+.chat-msg.user  { align-self:flex-end; flex-direction:row-reverse; }
+.chat-msg.ai    { align-self:flex-start; }
+
+.chat-avatar {
+  width:32px; height:32px; border-radius:10px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:15px;
+}
+.chat-msg.user .chat-avatar { background:linear-gradient(135deg,var(--accent),var(--accent2)); }
+.chat-msg.ai   .chat-avatar { background:linear-gradient(135deg,#7c3aed,#a855f7); }
+
+.chat-bubble {
+  padding:11px 15px; border-radius:14px;
+  font-size:13px; line-height:1.7; white-space:pre-wrap; word-break:break-word;
+}
+.chat-msg.user .chat-bubble {
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#fff; border-bottom-right-radius:4px;
+}
+.chat-msg.ai .chat-bubble {
+  background:var(--surface2); border:1px solid var(--border);
+  color:var(--text); border-bottom-left-radius:4px;
+}
+.chat-msg.ai .chat-bubble.loading {
+  color:var(--text3); font-style:italic;
+}
+.chat-bubble strong { color:var(--accent); }
+.chat-bubble .bullet { display:block; padding-left:12px; }
+
+.chat-quick {
+  padding:12px 16px; border-top:1px solid var(--border);
+  display:flex; gap:8px; flex-wrap:wrap;
+}
+.quick-btn {
+  padding:6px 12px; border-radius:20px; border:1px solid var(--border);
+  background:var(--surface2); color:var(--text2); font-size:11px;
+  cursor:pointer; font-family:inherit; transition:all .15s; white-space:nowrap;
+}
+.quick-btn:hover { border-color:var(--accent); color:var(--accent); background:rgba(59,130,246,.08); }
+
+.chat-input-row {
+  padding:14px 16px; border-top:1px solid var(--border);
+  display:flex; gap:10px; align-items:flex-end;
+}
+.chat-input {
+  flex:1; padding:11px 14px; background:var(--surface2);
+  border:1px solid var(--border); border-radius:12px;
+  color:var(--text); font-size:13px; font-family:inherit;
+  resize:none; outline:none; transition:border-color .15s;
+  max-height:120px; line-height:1.5;
+}
+.chat-input:focus { border-color:var(--accent); }
+.chat-input::placeholder { color:var(--text3); }
+.chat-send-btn {
+  width:42px; height:42px; border-radius:12px; flex-shrink:0;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none; color:#fff; font-size:18px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all .15s; box-shadow:0 2px 8px rgba(59,130,246,.3);
+}
+.chat-send-btn:hover  { transform:translateY(-1px); box-shadow:0 4px 12px rgba(59,130,246,.4); }
+.chat-send-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+.ai-key-banner {
+  background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.25);
+  border-radius:12px; padding:14px 18px; margin-bottom:16px;
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+}
+.ai-key-input {
+  flex:1; min-width:200px; padding:8px 12px;
+  background:var(--surface2); border:1px solid var(--border);
+  border-radius:8px; color:var(--text); font-size:12px;
+  font-family:var(--mono); outline:none;
+}
+.ai-key-input:focus { border-color:var(--accent); }
+
+.chat-empty {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:8px;
+  color:var(--text3); padding:40px;
+}
+.chat-empty-icon { font-size:48px; margin-bottom:8px; }
+.chat-empty-title { font-size:16px; font-weight:700; color:var(--text2); }
+.chat-empty-sub   { font-size:12px; text-align:center; line-height:1.6; }
+
 /* ───── SCROLLBAR ───── */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -703,6 +804,9 @@ tbody tr:hover { background: var(--surface2); }
     </div>
     <div class="nav-item" onclick="nav('realestate')">
       <span class="ni">🏢</span> 부동산
+    </div>
+    <div class="nav-item" onclick="nav('ai')">
+      <span class="ni">🤖</span> AI 분석
     </div>
   </div>
 
@@ -1125,6 +1229,63 @@ tbody tr:hover { background: var(--surface2); }
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── AI CHATBOT ── -->
+<div id="page-ai" class="page">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>🤖 AI 포트폴리오 분석</h1>
+      <p style="font-size:12px;color:var(--text2);margin-top:4px">Claude AI가 보유 종목·부동산 데이터를 분석합니다</p>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost btn-sm" onclick="clearChat()">🗑 대화 초기화</button>
+    </div>
+  </div>
+
+  <!-- API Key 배너 (미설정시) -->
+  <div class="ai-key-banner" id="aiKeyBanner">
+    <span style="font-size:18px">🔑</span>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:4px">Firebase Functions 배포 후 Claude API Key 설정 필요</div>
+      <div style="font-size:11px;color:var(--text3)">아래 설정 가이드를 따라 배포하면 이 배너가 사라집니다</div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="document.getElementById('aiKeyBanner').style.display='none'">닫기</button>
+  </div>
+
+  <div class="chat-wrap">
+    <!-- 빠른 질문 버튼 -->
+    <div class="chat-quick">
+      <span style="font-size:11px;color:var(--text3);align-self:center;margin-right:4px">빠른 분석:</span>
+      <button class="quick-btn" onclick="quickAsk('전체 포트폴리오 리스크를 분석해줘')">📊 리스크 분석</button>
+      <button class="quick-btn" onclick="quickAsk('수익률이 가장 좋은 종목과 나쁜 종목을 비교 분석해줘')">📈 수익률 비교</button>
+      <button class="quick-btn" onclick="quickAsk('지금 포트폴리오에서 비중 조정이 필요한 종목이 있는지 알려줘')">⚖️ 비중 조정</button>
+      <button class="quick-btn" onclick="quickAsk('배당 수익률을 높이려면 어떻게 해야 할까? 현재 보유 종목 기준으로 조언해줘')">💰 배당 전략</button>
+      <button class="quick-btn" onclick="quickAsk('보유 부동산의 임대수익률이 적정한지 분석하고 개선 방안을 제시해줘')">🏢 부동산 분석</button>
+    </div>
+
+    <!-- 메시지 영역 -->
+    <div class="chat-messages" id="chatMessages">
+      <div class="chat-empty" id="chatEmpty">
+        <div class="chat-empty-icon">🤖</div>
+        <div class="chat-empty-title">Claude AI 어시스턴트</div>
+        <div class="chat-empty-sub">
+          보유 종목, 손익, 부동산 데이터를 자동으로 파악하고<br>
+          투자 분석·전략·조언을 제공합니다<br><br>
+          위 빠른 질문 버튼이나 직접 입력해 시작하세요
+        </div>
+      </div>
+    </div>
+
+    <!-- 입력창 -->
+    <div class="chat-input-row">
+      <textarea class="chat-input" id="chatInput" rows="1"
+        placeholder="포트폴리오에 대해 무엇이든 물어보세요..."
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat()}"
+        oninput="autoResize(this)"></textarea>
+      <button class="chat-send-btn" id="chatSendBtn" onclick="sendChat()">↑</button>
     </div>
   </div>
 </div>
@@ -1575,6 +1736,7 @@ function nav(page) {
   if (page==='dividend')    renderDividend();
   if (page==='quote')       renderQuote();
   if (page==='realestate')  renderRealEstate();
+  if (page==='ai')          initAiPage();
 }
 
 // ════════════════════════════════════════
@@ -2522,7 +2684,7 @@ function taxCalc() {
     document.getElementById('taxResult').innerHTML = `
       <div class="tax-result-title">📊 세금 계산 결과</div>
       <div style="color:var(--text3);font-size:12px;text-align:center;padding:20px 0">
-        취득가액과 양도가액을 입력하면<br>자동 계산됩니다
+        ${!buy ? '취득가액을' : '양도가액(현재시세)을'} 입력하면<br>자동 계산됩니다
       </div>`;
     return;
   }
@@ -2533,105 +2695,286 @@ function taxCalc() {
   // 2. 1세대1주택 비과세 처리
   let exemptAmt = 0;
   let isFullExempt = false;
-  if (exempt==='1') { isFullExempt = true; }
-  else if (exempt==='2' && sell > 12000) {
-    // 고가주택: 12억 초과분만 과세
-    exemptAmt = gain * (12000 / sell);
+  if (exempt==='1') {
+    isFullExempt = true;
+  } else if (exempt==='2' && sell > 120000) {
+    // 고가주택(12억 초과): 12억 이하분 비과세, 초과분만 과세
+    exemptAmt = gain * (120000 / sell);
     gain = gain - exemptAmt;
   }
 
-  // 3. 장기보유특별공제
+  // 3. 장기보유특별공제 (다주택+조정대상지역은 배제)
   let ltdcRate = 0;
-  if (!isFullExempt && gain > 0) {
-    if (ltdcYr>=15) ltdcRate=0.30;
-    else if (ltdcYr>=10) ltdcRate=0.20;
-    else if (ltdcYr>=5)  ltdcRate=0.10;
-    else if (ltdcYr>=3)  ltdcRate=0.06;
-    // 다주택 조정지역은 장특공제 배제
-    if (count>=2 && adj) ltdcRate = 0;
+  if (!isFullExempt && gain > 0 && !(count >= 2 && adj)) {
+    if      (ltdcYr >= 15) ltdcRate = 0.30;
+    else if (ltdcYr >= 10) ltdcRate = 0.20;
+    else if (ltdcYr >=  5) ltdcRate = 0.10;
+    else if (ltdcYr >=  3) ltdcRate = 0.06;
   }
-  const ltdcAmt = isFullExempt ? 0 : Math.max(0,gain) * ltdcRate;
-  const taxBase = isFullExempt ? 0 : Math.max(0, gain - ltdcAmt);
+  const ltdcAmt  = isFullExempt ? 0 : Math.max(0, gain) * ltdcRate;
+  const taxBase  = isFullExempt ? 0 : Math.max(0, gain - ltdcAmt);
 
-  // 4. 기본공제 (250만원)
-  const basicDeduct = isFullExempt ? 0 : Math.min(taxBase, 250);
-  const taxableIncome = Math.max(0, taxBase - basicDeduct);
+  // 4. 기본공제 250만원 (연 1회)
+  const basicDeduct    = isFullExempt ? 0 : Math.min(taxBase, 250);
+  const taxableIncome  = Math.max(0, taxBase - basicDeduct);
 
   // 5. 세율 결정
-  let rate = 0;
-  let rateName = '';
+  let rate = 0, rateName = '';
   if (isFullExempt) {
-    rate = 0; rateName = '비과세';
-  } else if (hold==='0') {
-    // 1년 미만
-    rate = count>=1 ? 0.70 : 0.50;
-    rateName = count>=2&&adj ? '단기중과 70%' : '단기양도 70%';
-  } else if (hold==='1') {
-    rate = count>=2&&adj ? 0.60 : 0.40;
-    rateName = count>=2&&adj ? '중과 60%' : '단기양도 40%';
+    rate = 0; rateName = '비과세 (해당 없음)';
+  } else if (hold === '0') {
+    rate = 0.70;
+    rateName = count >= 2 && adj ? '단기중과 70%' : '단기양도 70%';
+  } else if (hold === '1') {
+    rate = count >= 2 && adj ? 0.60 : 0.40;
+    rateName = count >= 2 && adj ? '중과세 60%' : '단기양도 40%';
   } else {
-    // 2년 이상 - 누진세율
-    if (count>=3 && adj) { rate = 0; rateName = '누진+30%p 중과'; }
-    else if (count>=2 && adj) { rate = 0; rateName = '누진+20%p 중과'; }
-    else { rate = 0; rateName = '누진세율'; }
+    // 2년 이상: 기본 누진세율 + 다주택 중과
+    rate = 0;
+    if (count >= 3 && adj) rateName = '누진세율 + 30%p 중과';
+    else if (count >= 2 && adj) rateName = '누진세율 + 20%p 중과';
+    else rateName = '누진세율';
   }
 
-  // 누진세율 계산
+  // 6. 세금 계산
   let transferTax = 0;
   if (!isFullExempt) {
-    if (rate>0) {
+    if (rate > 0) {
+      // 단일세율 (단기양도·중과)
       transferTax = taxableIncome * rate;
     } else {
-      // 누진세율 (단위: 만원)
+      // ── 2024년 종합소득세 누진세율 (단위: 만원) ──
+      // 구간 상한액 / 세율 / 누진공제
       const brackets = [
-        [1400,0.06],[3400,0.15],[8800,0.24],[15000,0.35],[30000,0.38],[45000,0.40],[100000,0.42],[Infinity,0.45]
+        { limit:  1400, rate: 0.06, deduct:     0 },
+        { limit:  5000, rate: 0.15, deduct:   126 },
+        { limit:  8800, rate: 0.24, deduct:   576 },
+        { limit: 15000, rate: 0.35, deduct:  1544 },
+        { limit: 30000, rate: 0.38, deduct:  1994 },
+        { limit: 50000, rate: 0.40, deduct:  2594 },
+        { limit:100000, rate: 0.42, deduct:  3594 },
+        { limit: Infinity, rate: 0.45, deduct: 6594 },
       ];
-      const surcharges = [0,126,576,1544,3594,9594,17394,94394]; // 누진공제
-      let prev=0;
-      for(let i=0;i<brackets.length;i++){
-        if(taxableIncome<=brackets[i][0]){
-          transferTax = taxableIncome*brackets[i][1] - surcharges[i];
+      for (const b of brackets) {
+        if (taxableIncome <= b.limit) {
+          transferTax = taxableIncome * b.rate - b.deduct;
           break;
         }
-        prev=brackets[i][0];
       }
-      // 다주택 중과 가산
-      if (count>=3 && adj) transferTax += taxableIncome*0.30;
-      else if (count>=2 && adj) transferTax += taxableIncome*0.20;
+      transferTax = Math.max(0, transferTax);
+      // 다주택 조정대상지역 중과세 가산
+      if      (count >= 3 && adj) transferTax += taxableIncome * 0.30;
+      else if (count >= 2 && adj) transferTax += taxableIncome * 0.20;
     }
   }
 
-  const localTax   = transferTax * 0.10;  // 지방소득세 10%
-  const totalTax   = transferTax + localTax;
-  const netProfit  = gain - totalTax;
-  const netPct     = buy ? netProfit/buy*100 : 0;
-  const agentFee   = sell * 0.005; // 중개수수료 추정 0.5%
+  transferTax = Math.max(0, transferTax);
+  const localTax  = transferTax * 0.10;   // 지방소득세 10%
+  const totalTax  = transferTax + localTax;
+  // 중개수수료: 6억 이하 0.4%, 9억 이하 0.5%, 9억 초과 0.9% (상한)
+  const agentRate = sell >= 90000 ? 0.009 : sell >= 60000 ? 0.005 : 0.004;
+  const agentFee  = sell * agentRate;
+  const netProfit = gain - totalTax;
+  const netPct    = buy ? netProfit / buy * 100 : 0;
 
   document.getElementById('taxResult').innerHTML = `
     <div class="tax-result-title">📊 세금 계산 결과 <span style="font-size:10px;color:var(--text3);font-weight:400">(2024년 기준 / 참고용)</span></div>
     <div class="tax-row"><span class="tax-row-label">양도가액</span><span class="tax-row-val">${fmtNum(sell,0)}만원</span></div>
     <div class="tax-row"><span class="tax-row-label">취득원가 + 필요경비</span><span class="tax-row-val">${fmtNum(buy+cost,0)}만원</span></div>
-    <div class="tax-row"><span class="tax-row-label">양도차익</span><span class="tax-row-val ${gain>=0?'tag-up':'tag-down'}">${fmtNum(gain,0)}만원</span></div>
+    <div class="tax-row"><span class="tax-row-label">양도차익</span><span class="tax-row-val ${gain>=0?'tag-up':'tag-down'}">${gain>=0?'+':''}${fmtNum(gain,0)}만원</span></div>
     ${exemptAmt>0?`<div class="tax-row"><span class="tax-row-label">비과세 공제 (12억 이하분)</span><span class="tax-row-val" style="color:var(--up)">-${fmtNum(exemptAmt,0)}만원</span></div>`:''}
     ${ltdcAmt>0?`<div class="tax-row"><span class="tax-row-label">장기보유특별공제 (${(ltdcRate*100).toFixed(0)}%)</span><span class="tax-row-val" style="color:var(--up)">-${fmtNum(ltdcAmt,0)}만원</span></div>`:''}
-    ${!isFullExempt?`<div class="tax-row"><span class="tax-row-label">기본공제</span><span class="tax-row-val" style="color:var(--up)">-${fmtNum(basicDeduct,0)}만원</span></div>`:''}
+    <div class="tax-row"><span class="tax-row-label">기본공제</span><span class="tax-row-val" style="color:var(--up)">-${fmtNum(basicDeduct,0)}만원</span></div>
     <div class="tax-row"><span class="tax-row-label">과세표준</span><span class="tax-row-val">${fmtNum(taxableIncome,0)}만원</span></div>
-    <div class="tax-row"><span class="tax-row-label">적용세율</span><span class="tax-row-val">${rateName||'누진세율'}</span></div>
+    <div class="tax-row"><span class="tax-row-label">적용세율</span><span class="tax-row-val" style="color:var(--accent)">${rateName||'누진세율'}</span></div>
+    <div style="height:1px;background:var(--border);margin:6px 0"></div>
     <div class="tax-row"><span class="tax-row-label">양도소득세</span><span class="tax-row-val" style="color:var(--down)">${fmtNum(transferTax,0)}만원</span></div>
     <div class="tax-row"><span class="tax-row-label">지방소득세 (10%)</span><span class="tax-row-val" style="color:var(--down)">${fmtNum(localTax,0)}만원</span></div>
-    <div class="tax-row"><span class="tax-row-label">중개수수료 추정 (0.5%)</span><span class="tax-row-val" style="color:var(--down)">${fmtNum(agentFee,0)}만원</span></div>
-    <div class="tax-row"><span class="tax-row-label" style="font-weight:700">총 세금 + 수수료</span><span class="tax-row-val" style="color:var(--down);font-weight:700">${fmtNum(totalTax+agentFee,0)}만원</span></div>
+    <div class="tax-row"><span class="tax-row-label">중개수수료 추정 (${(agentRate*100).toFixed(1)}%)</span><span class="tax-row-val" style="color:var(--down)">${fmtNum(agentFee,0)}만원</span></div>
+    <div class="tax-row" style="font-weight:700"><span class="tax-row-label">총 세금 + 수수료</span><span class="tax-row-val" style="color:var(--down)">${fmtNum(totalTax+agentFee,0)}만원</span></div>
     <div class="tax-total-row">
       <span class="tax-total-label">실수령 순이익</span>
-      <span class="tax-total-val ${netProfit>=0?'':'tag-down'}">${netProfit>=0?'+':''}${fmtNum(netProfit,0)}만원 (${netPct.toFixed(1)}%)</span>
+      <span class="tax-total-val ${netProfit>=0?'':'tag-down'}">${netProfit>=0?'+':''}${fmtNum(netProfit,0)}만원 (${netPct>=0?'+':''}${netPct.toFixed(1)}%)</span>
     </div>
-    <div class="tax-warn">※ 본 계산은 참고용이며 실제 세금은 보유 현황·지역·공시가격·임대사업자 등록 여부 등에 따라 달라집니다.<br>정확한 세금은 세무사 상담을 권장합니다.</div>
+    <div class="tax-warn">※ 본 계산은 참고용이며 실제 세금은 보유 현황·지역·공시가격·임대사업자 등록 여부 등에 따라 달라집니다. 정확한 세금은 세무사 상담을 권장합니다.</div>
   `;
 }
 
 // ── 시세 갱신 (수동 입력 팝업 방식 — API 미지원) ──
 function reFetchAll() {
   toast('부동산 시세는 네이버 부동산 등에서 확인 후 편집 버튼으로 직접 업데이트 해주세요', 'info');
+}
+
+// ════════════════════════════════════════
+//  AI CHATBOT  (Firebase Functions 프록시)
+// ════════════════════════════════════════
+let _chatHistory  = [];   // { role, content }
+let _aiThinking   = false;
+let _claudeFn     = null; // Firebase callable function
+
+function initAiPage() {
+  // Firebase Functions callable 초기화
+  if (!_claudeFn && _fbReady && firebase.functions) {
+    const fn = firebase.app().functions('asia-northeast3');
+    _claudeFn = fn.httpsCallable('claudeProxy');
+  }
+  renderChatMessages();
+}
+
+// ── 포트폴리오 컨텍스트 자동 생성 ──
+function buildPortfolioContext() {
+  const totalVal  = holdings.reduce((s,h)=>s+h.qty*h.price,0);
+  const totalCost = holdings.reduce((s,h)=>s+h.qty*h.avg,0);
+  const totalPnl  = totalVal - totalCost;
+  const pnlPct    = totalCost ? (totalPnl/totalCost*100).toFixed(2) : 0;
+
+  const holdingLines = holdings.map(h => {
+    const val  = h.qty * h.price;
+    const pnl  = h.qty * (h.price - h.avg);
+    const pct  = h.avg ? ((h.price-h.avg)/h.avg*100).toFixed(1) : 0;
+    const wt   = totalVal ? (val/totalVal*100).toFixed(1) : 0;
+    return `  - ${h.name}(${h.ticker}) | ${h.market} | ${h.broker} | 수량:${h.qty} | 매입가:${h.avg} | 현재가:${h.price} | 평가액:${Math.round(val).toLocaleString()} | 손익:${pnl>=0?'+':''}${Math.round(pnl).toLocaleString()}(${pct}%) | 비중:${wt}%`;
+  }).join('\n');
+
+  const propLines = properties.map(p => {
+    const cost = (p.buy||0)+(p.acqtax||0)+(p.agent||0)+(p.etc||0);
+    const pnl  = (p.price||0) - cost;
+    const pct  = cost ? (pnl/cost*100).toFixed(1) : 0;
+    const rs   = rentals.filter(r=>r.propId===p.id && r.type!=='공실');
+    const ann  = rs.reduce((s,r)=>s+(r.type==='월세'?(r.monthly||0)*12:(r.deposit||0)*0.035),0);
+    const yld  = p.price ? (ann/p.price*100).toFixed(2) : 0;
+    return `  - ${p.name} | ${p.type} | 취득원가:${cost.toLocaleString()}만 | 현재시세:${(p.price||0).toLocaleString()}만 | 손익:${pnl>=0?'+':''}${pnl.toLocaleString()}만(${pct}%) | 임대수익률:${yld}%`;
+  }).join('\n');
+
+  const totalReVal  = properties.reduce((s,p)=>s+(p.price||0),0);
+  const annRental   = rentals.filter(r=>r.type!=='공실').reduce((s,r)=>s+(r.type==='월세'?(r.monthly||0)*12:(r.deposit||0)*0.035),0);
+
+  return `
+[포트폴리오 현황 — ${new Date().toLocaleDateString('ko-KR')} 기준]
+
+■ 주식/ETF 포트폴리오
+총 평가금액: ${totalVal.toLocaleString()} | 총 손익: ${totalPnl>=0?'+':''}${Math.round(totalPnl).toLocaleString()} (${pnlPct}%)
+보유 종목 수: ${holdings.length}개
+${holdingLines || '  (보유 종목 없음)'}
+
+■ 부동산 포트폴리오
+총 자산가치: ${totalReVal.toLocaleString()}만원 | 연간 임대수익: ${annRental.toLocaleString()}만원
+보유 건수: ${properties.length}건
+${propLines || '  (보유 부동산 없음)'}
+
+■ 최근 일별 손익 (최근 5개)
+${dailyLogs.slice(-5).map(d=>`  - ${d.date}: ${d.holdingId||'전체'} ${d.close>=0?'+':''}${(d.close||0).toLocaleString()}`).join('\n') || '  (기록 없음)'}
+`.trim();
+}
+
+// ── 메시지 렌더 ──
+function renderChatMessages() {
+  const container = document.getElementById('chatMessages');
+  const empty     = document.getElementById('chatEmpty');
+  if (!container) return;
+
+  if (!_chatHistory.length) {
+    if (empty) empty.style.display = 'flex';
+    const existing = container.querySelectorAll('.chat-msg');
+    existing.forEach(e => e.remove());
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+
+  // 전체 재렌더 (메시지 누적)
+  const existing = container.querySelectorAll('.chat-msg');
+  existing.forEach(e => e.remove());
+
+  _chatHistory.forEach(msg => {
+    const isUser = msg.role === 'user';
+    const div = document.createElement('div');
+    div.className = `chat-msg ${isUser ? 'user' : 'ai'}`;
+    div.innerHTML = `
+      <div class="chat-avatar">${isUser ? '👤' : '🤖'}</div>
+      <div class="chat-bubble${msg.loading?' loading':''}">${formatAiText(msg.content)}</div>`;
+    container.appendChild(div);
+  });
+  container.scrollTop = container.scrollHeight;
+}
+
+function formatAiText(text) {
+  // 마크다운 기본 변환
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/^#{1,3}\s(.+)$/gm, '<strong style="display:block;margin:8px 0 4px;color:var(--text)">$1</strong>')
+    .replace(/^[-•]\s(.+)$/gm, '<span class="bullet">• $1</span>')
+    .replace(/\n/g, '<br>');
+}
+
+// ── 전송 ──
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text  = input?.value.trim();
+  if (!text || _aiThinking) return;
+
+  // 사용자 메시지 추가
+  _chatHistory.push({ role: 'user', content: text });
+  input.value = '';
+  input.style.height = 'auto';
+
+  // AI 로딩 메시지
+  _chatHistory.push({ role: 'assistant', content: '분석 중...', loading: true });
+  renderChatMessages();
+  _aiThinking = true;
+  document.getElementById('chatSendBtn').disabled = true;
+
+  try {
+    const portfolioCtx = buildPortfolioContext();
+    const systemPrompt = `당신은 전문 포트폴리오 투자 분석 어시스턴트입니다.
+아래는 사용자의 실제 포트폴리오 현황입니다. 이 데이터를 기반으로 구체적이고 실용적인 분석과 조언을 한국어로 제공하세요.
+금융 투자는 원금 손실 위험이 있으므로 분석은 참고용임을 항상 명심하세요.
+
+${portfolioCtx}`;
+
+    // Firebase Functions 호출 or 직접 API 호출(오프라인 모드)
+    let replyText = '';
+    if (_claudeFn) {
+      const messages = _chatHistory
+        .filter(m => !m.loading)
+        .slice(0, -1)  // 마지막 로딩 제외
+        .map(m => ({ role: m.role, content: m.content }));
+      const res  = await _claudeFn({ messages, systemPrompt });
+      replyText  = res.data?.content || '응답을 받지 못했습니다.';
+    } else {
+      replyText = '⚠️ Firebase Functions가 배포되지 않았습니다.\n아래 설정 가이드를 따라 배포해 주세요.';
+    }
+
+    // 로딩 제거 후 실제 응답 삽입
+    _chatHistory.pop();
+    _chatHistory.push({ role: 'assistant', content: replyText });
+
+  } catch (e) {
+    _chatHistory.pop();
+    const errMsg = e.code === 'functions/unauthenticated' ? '로그인 후 사용 가능합니다.'
+                 : e.code === 'functions/failed-precondition' ? 'Claude API 키가 서버에 설정되지 않았습니다.\n배포 가이드를 확인해 주세요.'
+                 : `오류: ${e.message}`;
+    _chatHistory.push({ role: 'assistant', content: `❌ ${errMsg}` });
+  }
+
+  _aiThinking = false;
+  document.getElementById('chatSendBtn').disabled = false;
+  renderChatMessages();
+}
+
+function quickAsk(text) {
+  const input = document.getElementById('chatInput');
+  if (input) { input.value = text; sendChat(); }
+}
+
+function clearChat() {
+  if (_chatHistory.length && !confirm('대화 내역을 초기화할까요?')) return;
+  _chatHistory = [];
+  renderChatMessages();
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
 }
 
 // ════════════════════════════════════════
