@@ -718,56 +718,15 @@ tbody tr:hover { background: var(--surface2); }
     </div>
 
     <div class="login-card">
-      <div class="login-tab-row">
-        <button class="login-tab active" id="tabLogin"    onclick="switchLoginTab('login')">로그인</button>
-        <button class="login-tab"        id="tabRegister" onclick="switchLoginTab('register')">회원가입</button>
+      <div class="login-field">
+        <label>접속 비밀번호</label>
+        <input class="login-input" id="li-pw" type="password" placeholder="비밀번호를 입력하세요" autocomplete="off"
+          onkeydown="if(event.key==='Enter')doLogin()">
       </div>
-
-      <!-- 로그인 -->
-      <div id="formLogin">
-        <div class="login-field">
-          <label>이메일</label>
-          <input class="login-input" id="li-email" type="email" placeholder="example@email.com" autocomplete="email"
-            onkeydown="if(event.key==='Enter')document.getElementById('li-pw').focus()">
-        </div>
-        <div class="login-field">
-          <label>비밀번호</label>
-          <input class="login-input" id="li-pw" type="password" placeholder="비밀번호" autocomplete="current-password"
-            onkeydown="if(event.key==='Enter')doLogin()">
-        </div>
-        <button class="login-btn" id="btnLogin" onclick="doLogin()">로그인</button>
-        <div class="login-msg" id="loginMsg"></div>
-      </div>
-
-      <!-- 회원가입 -->
-      <div id="formRegister" style="display:none">
-        <div class="login-field">
-          <label>이름 (표시명)</label>
-          <input class="login-input" id="rg-name" type="text" placeholder="홍길동"
-            onkeydown="if(event.key==='Enter')document.getElementById('rg-email').focus()">
-        </div>
-        <div class="login-field">
-          <label>이메일</label>
-          <input class="login-input" id="rg-email" type="email" placeholder="example@email.com"
-            onkeydown="if(event.key==='Enter')document.getElementById('rg-pw').focus()">
-        </div>
-        <div class="login-field">
-          <label>비밀번호 (8자 이상)</label>
-          <input class="login-input" id="rg-pw" type="password" placeholder="8자 이상"
-            onkeydown="if(event.key==='Enter')document.getElementById('rg-pw2').focus()">
-        </div>
-        <div class="login-field">
-          <label>비밀번호 확인</label>
-          <input class="login-input" id="rg-pw2" type="password" placeholder="비밀번호 재입력"
-            onkeydown="if(event.key==='Enter')doRegister()">
-        </div>
-        <button class="login-btn" id="btnRegister" onclick="doRegister()">계정 만들기</button>
-        <div class="login-msg" id="registerMsg"></div>
-      </div>
-
+      <button class="login-btn" id="btnLogin" onclick="doLogin()">접속</button>
+      <div class="login-msg" id="loginMsg"></div>
       <div class="login-hint">
-        계정 정보는 Firebase 서버에 안전하게 저장됩니다<br>
-        어느 기기에서나 동일한 이메일로 접속 가능합니다
+        이 앱은 회원 관리 없이 단일 비밀번호로 접근합니다.
       </div>
     </div>
   </div>
@@ -3052,82 +3011,44 @@ function autoResize(el) {
 // ════════════════════════════════════════
 //  AUTH
 // ════════════════════════════════════════
-function switchLoginTab(tab) {
-  const isLogin = tab === 'login';
-  document.getElementById('tabLogin').classList.toggle('active', isLogin);
-  document.getElementById('tabRegister').classList.toggle('active', !isLogin);
-  document.getElementById('formLogin').style.display    = isLogin ? '' : 'none';
-  document.getElementById('formRegister').style.display = isLogin ? 'none' : '';
-  document.getElementById('loginMsg').className    = 'login-msg';
-  document.getElementById('registerMsg').className = 'login-msg';
-}
-
 function setLoginMsg(id, text, type) {
   const el = document.getElementById(id);
+  if (!el) return;
   el.textContent = text;
   el.className = 'login-msg ' + type;
 }
 
 async function doLogin() {
-  if (!_fbReady) { setLoginMsg('loginMsg','Firebase 설정이 필요합니다. 상단의 firebaseConfig를 채워주세요.','err'); return; }
-  const email = document.getElementById('li-email').value.trim();
-  const pw    = document.getElementById('li-pw').value;
-  if (!email || !pw) { setLoginMsg('loginMsg','이메일과 비밀번호를 입력해 주세요.','err'); return; }
+  const pw = document.getElementById('li-pw').value;
+  if (!pw) { setLoginMsg('loginMsg','비밀번호를 입력해 주세요.','err'); return; }
   const btn = document.getElementById('btnLogin');
-  btn.disabled = true; btn.textContent = '로그인 중...';
-  try {
-    await _auth.signInWithEmailAndPassword(email, pw);
-    // onAuthStateChanged will handle the rest
-  } catch(e) {
-    const msg = e.code === 'auth/user-not-found' ? '등록되지 않은 이메일입니다.'
-              : e.code === 'auth/wrong-password'  ? '비밀번호가 올바르지 않습니다.'
-              : e.code === 'auth/invalid-email'   ? '이메일 형식이 올바르지 않습니다.'
-              : e.code === 'auth/too-many-requests' ? '시도 횟수 초과. 잠시 후 다시 시도해주세요.'
-              : '로그인 실패: ' + e.message;
-    setLoginMsg('loginMsg', msg, 'err');
-    btn.disabled = false; btn.textContent = '로그인';
+  btn.disabled = true; btn.textContent = '접속 중...';
+  const ACCESS_PASSWORD = '1219';
+  if (pw !== ACCESS_PASSWORD) {
+    setLoginMsg('loginMsg','비밀번호가 올바르지 않습니다.','err');
+    btn.disabled = false; btn.textContent = '접속';
+    return;
   }
-}
-
-async function doRegister() {
-  if (!_fbReady) { setLoginMsg('registerMsg','Firebase 설정이 필요합니다.','err'); return; }
-  const name  = document.getElementById('rg-name').value.trim();
-  const email = document.getElementById('rg-email').value.trim();
-  const pw    = document.getElementById('rg-pw').value;
-  const pw2   = document.getElementById('rg-pw2').value;
-  if (!name)       { setLoginMsg('registerMsg','이름을 입력해 주세요.','err'); return; }
-  if (!email)      { setLoginMsg('registerMsg','이메일을 입력해 주세요.','err'); return; }
-  if (pw.length<8) { setLoginMsg('registerMsg','비밀번호는 8자 이상이어야 합니다.','err'); return; }
-  if (pw !== pw2)  { setLoginMsg('registerMsg','비밀번호가 일치하지 않습니다.','err'); return; }
-  const btn = document.getElementById('btnRegister');
-  btn.disabled = true; btn.textContent = '계정 생성 중...';
-  try {
-    const cred = await _auth.createUserWithEmailAndPassword(email, pw);
-    await cred.user.updateProfile({ displayName: name });
-    setLoginMsg('registerMsg','✓ 계정이 생성됐습니다! 잠시 후 자동으로 진입합니다.','ok');
-    // onAuthStateChanged will trigger loadUserData
-  } catch(e) {
-    const msg = e.code === 'auth/email-already-in-use' ? '이미 사용 중인 이메일입니다.'
-              : e.code === 'auth/invalid-email'        ? '이메일 형식이 올바르지 않습니다.'
-              : e.code === 'auth/weak-password'        ? '비밀번호가 너무 약합니다.'
-              : '회원가입 실패: ' + e.message;
-    setLoginMsg('registerMsg', msg, 'err');
-    btn.disabled = false; btn.textContent = '계정 만들기';
-  }
+  holdings   = lcLoad('pf_holdings',  sampleHoldings());
+  dailyLogs  = lcLoad('pf_daily',     sampleDaily());
+  dividends  = lcLoad('pf_div',       sampleDiv());
+  properties = lcLoad('pf_props',     sampleProps());
+  rentals    = lcLoad('pf_rentals',   sampleRentals());
+  document.getElementById('loginScreen').classList.add('hidden');
+  enterApp({ displayName: '관리자', email: 'local@local' });
+  btn.disabled = false; btn.textContent = '접속';
 }
 
 async function doLogout() {
   if (!confirm('로그아웃 하시겠습니까?')) return;
-  if (_auth) await _auth.signOut();
   _currentUid = null;
   holdings = []; dailyLogs = []; dividends = []; properties = []; rentals = [];
   document.getElementById('loginScreen').classList.remove('hidden');
-  // reset login form
-  ['li-email','li-pw'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  const pwField = document.getElementById('li-pw');
+  if (pwField) pwField.value = '';
   document.getElementById('btnLogin').disabled = false;
-  document.getElementById('btnLogin').textContent = '로그인';
+  document.getElementById('btnLogin').textContent = '접속';
   document.getElementById('loginMsg').className = 'login-msg';
-  switchLoginTab('login');
 }
 
 // ════════════════════════════════════════
@@ -3137,20 +3058,13 @@ async function doLogout() {
   // Show Firebase setup banner if not configured
   if (!_fbReady) {
     const banner = document.getElementById('firebaseSetupBanner');
-    if (banner) banner.style.display = 'block';
+    if (banner) banner.style.display = 'none';
   }
 
   if (!_auth) {
-    // Firebase not configured — run in offline mode directly
-    holdings   = lcLoad('pf_holdings',  sampleHoldings());
-    dailyLogs  = lcLoad('pf_daily',     sampleDaily());
-    dividends  = lcLoad('pf_div',       sampleDiv());
-    properties = lcLoad('pf_props',     sampleProps());
-    rentals    = lcLoad('pf_rentals',   sampleRentals());
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('userDisplayName').textContent = '오프라인';
-    document.getElementById('userEmailLabel').textContent  = 'Firebase 미연결';
-    renderDashboard();
+    // Firebase 없이 단일 비밀번호로 접근
+    document.getElementById('loginScreen').classList.remove('hidden');
+    showLoadingOverlay(false);
     return;
   }
 
