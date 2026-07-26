@@ -721,6 +721,29 @@ tbody tr:hover { background: var(--surface2); }
   background:var(--surface2); color:var(--text2); font-size:10px; font-weight:700;
   border:1px solid var(--border);
 }
+
+/* BOOKS */
+.book-title-cell { display:flex; align-items:center; gap:10px; }
+.book-icon {
+  width:34px; height:34px; border-radius:9px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(245,158,11,.12); color:var(--gold); font-size:16px;
+}
+.book-title { font-weight:700; font-size:13px; }
+.book-author { color:var(--text2); font-size:11px; margin-top:2px; }
+.book-status {
+  display:inline-flex; align-items:center; padding:3px 8px; border-radius:5px;
+  font-size:10px; font-weight:700; border:1px solid transparent;
+}
+.book-status.done { background:var(--up-dim); color:var(--up); border-color:rgba(0,217,126,.2); }
+.book-status.reading { background:rgba(59,130,246,.12); color:var(--accent); border-color:rgba(59,130,246,.2); }
+.book-status.paused { background:var(--gold-dim); color:var(--gold); border-color:rgba(245,158,11,.2); }
+.book-status.wish { background:rgba(100,116,139,.12); color:var(--flat); border-color:rgba(100,116,139,.2); }
+.book-rating { color:var(--gold); font-size:12px; letter-spacing:1px; white-space:nowrap; }
+.book-review {
+  max-width:280px; color:var(--text2); line-height:1.5;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
 </style>
 </head>
 <body>
@@ -789,6 +812,9 @@ tbody tr:hover { background: var(--surface2); }
     </div>
     <div class="nav-item" onclick="nav('certificates')">
       <span class="ni">📜</span> 자격증 관리
+    </div>
+    <div class="nav-item" onclick="nav('books')">
+      <span class="ni">📚</span> 도서 관리
     </div>
     <div class="nav-item" onclick="nav('ai')">
       <span class="ni">🤖</span> AI 분석
@@ -1294,6 +1320,83 @@ tbody tr:hover { background: var(--surface2); }
   </div>
 </div>
 
+<!-- BOOKS -->
+<div id="page-books" class="page">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>📚 도서 관리</h1>
+      <p style="font-size:12px;color:var(--text2);margin-top:4px">읽은 책과 읽는 중인 책, 간단한 독서 소감을 기록합니다</p>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost" onclick="exportBookCSV()">📤 CSV 내보내기</button>
+      <button class="btn btn-primary" onclick="openAddBook()">＋ 도서 추가</button>
+    </div>
+  </div>
+
+  <div class="summary-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="sum-card" style="--grad:linear-gradient(90deg,#3b82f6,#06b6d4)">
+      <div class="sum-icon">📚</div>
+      <div class="sum-label">총 도서</div>
+      <div class="sum-value" id="book-total">0</div>
+      <div class="sum-sub">등록된 도서</div>
+    </div>
+    <div class="sum-card" style="--grad:linear-gradient(90deg,#00d97e,#84cc16)">
+      <div class="sum-icon">✅</div>
+      <div class="sum-label">완독</div>
+      <div class="sum-value" id="book-done">0</div>
+      <div class="sum-sub">읽기를 마친 책</div>
+    </div>
+    <div class="sum-card" style="--grad:linear-gradient(90deg,#f59e0b,#f97316)">
+      <div class="sum-icon">📖</div>
+      <div class="sum-label">읽는 중</div>
+      <div class="sum-value" id="book-reading">0</div>
+      <div class="sum-sub">진행 중인 책</div>
+    </div>
+    <div class="sum-card" style="--grad:linear-gradient(90deg,#818cf8,#a855f7)">
+      <div class="sum-icon">★</div>
+      <div class="sum-label">평균 평점</div>
+      <div class="sum-value" id="book-avg">0.0</div>
+      <div class="sum-sub">완독 도서 기준</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="bookSearch" placeholder="도서명, 저자, 출판사, 소감 검색" oninput="renderBooks()">
+    </div>
+    <select class="filter-sel" id="bookStatusFilter" onchange="renderBooks()">
+      <option value="">전체 상태</option>
+      <option value="done">완독</option>
+      <option value="reading">읽는 중</option>
+      <option value="paused">보류</option>
+      <option value="wish">읽을 예정</option>
+    </select>
+    <select class="filter-sel" id="bookCategoryFilter" onchange="renderBooks()">
+      <option value="">전체 분야</option>
+      <option value="경제/경영">경제/경영</option>
+      <option value="자기계발">자기계발</option>
+      <option value="인문/사회">인문/사회</option>
+      <option value="문학">문학</option>
+      <option value="IT/과학">IT/과학</option>
+      <option value="기타">기타</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>도서</th><th>분야</th><th>상태</th><th>독서 기간</th>
+        <th>평점</th><th>간단 소감</th><th>관리</th>
+      </tr></thead>
+      <tbody id="bookTable"></tbody>
+    </table>
+    <div id="bookEmpty" class="empty" style="display:none">
+      <div class="ei">📚</div><p>조건에 맞는 도서 기록이 없습니다</p>
+    </div>
+  </div>
+</div>
+
 <!-- ── AI CHATBOT ── -->
 <div id="page-ai" class="page">
   <div class="topbar">
@@ -1684,6 +1787,81 @@ tbody tr:hover { background: var(--surface2); }
   </div>
 </div>
 
+<!-- MODAL: BOOK -->
+<div class="overlay" id="bookModal" onclick="closeModal('bookModal',event)">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="bookModalTitle">도서 추가</h3>
+      <button class="modal-close" onclick="closeBookModal()">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <div class="form-label">도서명 *</div>
+        <input class="form-input" id="book-title" placeholder="예: 돈의 심리학">
+      </div>
+      <div class="form-group">
+        <div class="form-label">저자</div>
+        <input class="form-input" id="book-author" placeholder="예: 모건 하우절">
+      </div>
+      <div class="form-group">
+        <div class="form-label">출판사</div>
+        <input class="form-input" id="book-publisher" placeholder="출판사">
+      </div>
+      <div class="form-group">
+        <div class="form-label">분야</div>
+        <select class="form-select" id="book-category">
+          <option value="경제/경영">경제/경영</option>
+          <option value="자기계발">자기계발</option>
+          <option value="인문/사회">인문/사회</option>
+          <option value="문학">문학</option>
+          <option value="IT/과학">IT/과학</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">상태</div>
+        <select class="form-select" id="book-status">
+          <option value="done">완독</option>
+          <option value="reading">읽는 중</option>
+          <option value="paused">보류</option>
+          <option value="wish">읽을 예정</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">평점</div>
+        <select class="form-select" id="book-rating">
+          <option value="0">평점 없음</option>
+          <option value="1">★ 1</option>
+          <option value="2">★★ 2</option>
+          <option value="3">★★★ 3</option>
+          <option value="4">★★★★ 4</option>
+          <option value="5">★★★★★ 5</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">시작일</div>
+        <input class="form-input" id="book-started" type="date">
+      </div>
+      <div class="form-group">
+        <div class="form-label">완독일</div>
+        <input class="form-input" id="book-finished" type="date">
+      </div>
+      <div class="form-group full">
+        <div class="form-label">간단 소감</div>
+        <textarea class="form-input" id="book-review" rows="4" placeholder="책을 읽고 남기고 싶은 한두 문장"></textarea>
+      </div>
+      <div class="form-group full">
+        <div class="form-label">메모</div>
+        <input class="form-input" id="book-memo" placeholder="인상 깊은 장, 재독 여부, 추천 대상 등">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeBookModal()">취소</button>
+      <button class="btn btn-primary" onclick="saveBook()">저장</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toasts" id="toasts"></div>
 
@@ -1729,9 +1907,11 @@ let dividends  = [];
 let properties = [];
 let rentals    = [];
 let certificates = [];
+let books = [];
 let editId     = null;
 let rePropEditId = null;
 let certEditId = null;
+let bookEditId = null;
 let calYear    = new Date().getFullYear();
 let calMonth   = new Date().getMonth();
 let _currentUid = null;
@@ -1753,8 +1933,8 @@ async function fsSave(uid,data) {
 async function saveAll() {
   lcSave('pf_holdings', holdings); lcSave('pf_daily', dailyLogs);
   lcSave('pf_div', dividends); lcSave('pf_props', properties); lcSave('pf_rentals', rentals);
-  lcSave('pf_certs', certificates);
-  if (_currentUid) fsSave(_currentUid, { holdings, dailyLogs, dividends, properties, rentals, certificates, updatedAt: new Date().toISOString() });
+  lcSave('pf_certs', certificates); lcSave('pf_books', books);
+  if (_currentUid) fsSave(_currentUid, { holdings, dailyLogs, dividends, properties, rentals, certificates, books, updatedAt: new Date().toISOString() });
 }
 
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
@@ -1782,9 +1962,10 @@ async function loadUserData(user) {
     properties = remote.properties || [];
     rentals    = remote.rentals    || [];
     certificates = remote.certificates || [];
+    books = remote.books || [];
     lcSave('pf_holdings',holdings); lcSave('pf_daily',dailyLogs);
     lcSave('pf_div',dividends); lcSave('pf_props',properties); lcSave('pf_rentals',rentals);
-    lcSave('pf_certs',certificates);
+    lcSave('pf_certs',certificates); lcSave('pf_books',books);
   } else {
     holdings   = lcLoad('pf_holdings',  sampleHoldings());
     dailyLogs  = lcLoad('pf_daily',     sampleDaily());
@@ -1792,6 +1973,7 @@ async function loadUserData(user) {
     properties = lcLoad('pf_props',     sampleProps());
     rentals    = lcLoad('pf_rentals',   sampleRentals());
     certificates = lcLoad('pf_certs',   sampleCerts());
+    books = lcLoad('pf_books',          sampleBooks());
     if (_fbReady) saveAll();
   }
   showLoadingOverlay(false);
@@ -1827,6 +2009,15 @@ function sampleCerts() {
     { id:'c1', name:'투자자산운용사', org:'금융투자협회', category:'금융', number:'', issued:`${y-3}-06-15`, expires:'', memo:'실무 관련 핵심 자격' },
     { id:'c2', name:'SQLD', org:'한국데이터산업진흥원', category:'IT', number:'', issued:`${y-2}-11-20`, expires:'', memo:'데이터 분석 기초' },
     { id:'c3', name:'TOEIC Speaking', org:'ETS', category:'어학', number:'', issued:`${y-1}-09-10`, expires:`${y+1}-09-10`, memo:'2년 유효' },
+  ];
+}
+
+function sampleBooks() {
+  const y = new Date().getFullYear();
+  return [
+    { id:'b1', title:'돈의 심리학', author:'모건 하우절', publisher:'인플루엔셜', category:'경제/경영', status:'done', rating:5, started:`${y}-01-05`, finished:`${y}-01-18`, review:'투자는 숫자보다 행동과 습관의 문제라는 점이 오래 남았다.', memo:'재독 추천' },
+    { id:'b2', title:'원씽', author:'게리 켈러', publisher:'비즈니스북스', category:'자기계발', status:'done', rating:4, started:`${y}-02-03`, finished:`${y}-02-12`, review:'중요한 한 가지를 먼저 정하는 기준이 명확해졌다.', memo:'' },
+    { id:'b3', title:'클린 코드', author:'로버트 C. 마틴', publisher:'인사이트', category:'IT/과학', status:'reading', rating:0, started:`${y}-03-01`, finished:'', review:'작은 함수와 명확한 이름의 힘을 다시 느끼는 중.', memo:'천천히 읽기' },
   ];
 }
 
@@ -1874,6 +2065,7 @@ function nav(page) {
   if (page==='quote')       renderQuote();
   if (page==='realestate')  { renderRealEstate(); reMaybeAutoRefresh(); }
   if (page==='certificates') renderCertificates();
+  if (page==='books')       renderBooks();
   if (page==='ai')          initAiPage();
 }
 
@@ -2616,6 +2808,162 @@ function exportCertCSV() {
   a.download = `certificates_${fmt(new Date())}.csv`;
   a.click();
   toast('자격증 CSV 다운로드 완료','ok');
+}
+
+// ════════════════════════════════════════
+//  BOOKS
+// ════════════════════════════════════════
+const BOOK_STATUS = {
+  done: { label:'완독', cls:'done' },
+  reading: { label:'읽는 중', cls:'reading' },
+  paused: { label:'보류', cls:'paused' },
+  wish: { label:'읽을 예정', cls:'wish' },
+};
+
+function bookStatusInfo(status) {
+  return BOOK_STATUS[status] || BOOK_STATUS.wish;
+}
+
+function bookRatingStars(n) {
+  n = parseInt(n) || 0;
+  return n ? '★★★★★'.slice(0,n) + '<span style="color:var(--text3)">' + '★★★★★'.slice(n) + '</span>' : '<span style="color:var(--text3)">-</span>';
+}
+
+function bookPeriod(b) {
+  if (b.started && b.finished) return `${b.started} ~ ${b.finished}`;
+  if (b.started) return `${b.started} ~`;
+  if (b.finished) return b.finished;
+  return '-';
+}
+
+function renderBooks() {
+  renderBookSummary();
+  const q = (document.getElementById('bookSearch')?.value || '').trim().toLowerCase();
+  const status = document.getElementById('bookStatusFilter')?.value || '';
+  const category = document.getElementById('bookCategoryFilter')?.value || '';
+  const tbody = document.getElementById('bookTable');
+  const empty = document.getElementById('bookEmpty');
+  if (!tbody || !empty) return;
+
+  const rows = books
+    .filter(b => !q || [b.title,b.author,b.publisher,b.review,b.memo].some(v => String(v||'').toLowerCase().includes(q)))
+    .filter(b => !status || b.status === status)
+    .filter(b => !category || b.category === category)
+    .sort((a,b) => (b.finished || b.started || '').localeCompare(a.finished || a.started || '') || (a.title||'').localeCompare(b.title||''));
+
+  if (!rows.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML = rows.map(b => {
+    const st = bookStatusInfo(b.status);
+    return `
+      <tr>
+        <td>
+          <div class="book-title-cell">
+            <div class="book-icon">📚</div>
+            <div><div class="book-title">${esc(b.title)}</div><div class="book-author">${esc(b.author || '저자 미입력')} · ${esc(b.publisher || '출판사 미입력')}</div></div>
+          </div>
+        </td>
+        <td><span class="cert-chip">${esc(b.category || '기타')}</span></td>
+        <td><span class="book-status ${st.cls}">${st.label}</span></td>
+        <td style="font-family:var(--mono);color:var(--text2)">${esc(bookPeriod(b))}</td>
+        <td><span class="book-rating">${bookRatingStars(b.rating)}</span></td>
+        <td><div class="book-review" title="${esc(b.review || '')}">${esc(b.review || '-')}</div></td>
+        <td>
+          <button class="btn btn-ghost btn-sm" onclick="openEditBook('${b.id}')">수정</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteBook('${b.id}')">삭제</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderBookSummary() {
+  const done = books.filter(b => b.status === 'done');
+  const reading = books.filter(b => b.status === 'reading').length;
+  const rated = done.filter(b => parseInt(b.rating) > 0);
+  const avg = rated.length ? rated.reduce((s,b)=>s+(parseInt(b.rating)||0),0) / rated.length : 0;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('book-total', books.length);
+  set('book-done', done.length);
+  set('book-reading', reading);
+  set('book-avg', avg.toFixed(1));
+}
+
+function openAddBook() {
+  bookEditId = null;
+  document.getElementById('bookModalTitle').textContent = '도서 추가';
+  ['book-title','book-author','book-publisher','book-started','book-finished','book-review','book-memo'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('book-category').value = '경제/경영';
+  document.getElementById('book-status').value = 'done';
+  document.getElementById('book-rating').value = '0';
+  document.getElementById('bookModal').classList.add('open');
+}
+
+function openEditBook(id) {
+  const b = books.find(x => x.id === id); if (!b) return;
+  bookEditId = id;
+  document.getElementById('bookModalTitle').textContent = '도서 수정';
+  document.getElementById('book-title').value = b.title || '';
+  document.getElementById('book-author').value = b.author || '';
+  document.getElementById('book-publisher').value = b.publisher || '';
+  document.getElementById('book-category').value = b.category || '기타';
+  document.getElementById('book-status').value = b.status || 'wish';
+  document.getElementById('book-rating').value = String(b.rating || 0);
+  document.getElementById('book-started').value = b.started || '';
+  document.getElementById('book-finished').value = b.finished || '';
+  document.getElementById('book-review').value = b.review || '';
+  document.getElementById('book-memo').value = b.memo || '';
+  document.getElementById('bookModal').classList.add('open');
+}
+
+function closeBookModal() { document.getElementById('bookModal').classList.remove('open'); }
+
+function saveBook() {
+  const title = document.getElementById('book-title').value.trim();
+  if (!title) { toast('도서명을 입력하세요', 'err'); return; }
+  const data = {
+    title,
+    author: document.getElementById('book-author').value.trim(),
+    publisher: document.getElementById('book-publisher').value.trim(),
+    category: document.getElementById('book-category').value,
+    status: document.getElementById('book-status').value,
+    rating: parseInt(document.getElementById('book-rating').value) || 0,
+    started: document.getElementById('book-started').value,
+    finished: document.getElementById('book-finished').value,
+    review: document.getElementById('book-review').value.trim(),
+    memo: document.getElementById('book-memo').value.trim(),
+  };
+  if (bookEditId) {
+    const i = books.findIndex(b => b.id === bookEditId);
+    books[i] = { ...books[i], ...data };
+    toast(`${title} 수정 완료`, 'ok');
+  } else {
+    books.push({ id:uid(), ...data });
+    toast(`${title} 추가 완료`, 'ok');
+  }
+  saveAll();
+  closeBookModal();
+  renderBooks();
+}
+
+function deleteBook(id) {
+  const b = books.find(x => x.id === id); if (!b) return;
+  if (!confirm(`"${b.title}" 도서 기록을 삭제하시겠습니까?`)) return;
+  books = books.filter(x => x.id !== id);
+  saveAll();
+  renderBooks();
+  toast(`${b.title} 삭제 완료`, 'info');
+}
+
+function exportBookCSV() {
+  const rows = [['도서명','저자','출판사','분야','상태','평점','시작일','완독일','간단 소감','메모']];
+  books.forEach(b => rows.push([b.title,b.author,b.publisher,b.category,bookStatusInfo(b.status).label,b.rating,b.started,b.finished,b.review,b.memo]));
+  const csv = rows.map(r=>r.map(v=>`"${String(v ?? '').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
+  a.download = `books_${fmt(new Date())}.csv`;
+  a.click();
+  toast('도서 CSV 다운로드 완료','ok');
 }
 
 // ════════════════════════════════════════
@@ -3539,6 +3887,7 @@ async function doLogin() {
   properties = lcLoad('pf_props',     sampleProps());
   rentals    = lcLoad('pf_rentals',   sampleRentals());
   certificates = lcLoad('pf_certs',   sampleCerts());
+  books = lcLoad('pf_books',          sampleBooks());
   document.getElementById('loginScreen').classList.add('hidden');
   enterApp({ displayName: '관리자', email: 'local@local' });
   btn.disabled = false; btn.textContent = '접속';
@@ -3547,7 +3896,7 @@ async function doLogin() {
 async function doLogout() {
   if (!confirm('로그아웃 하시겠습니까?')) return;
   _currentUid = null;
-  holdings = []; dailyLogs = []; dividends = []; properties = []; rentals = []; certificates = [];
+  holdings = []; dailyLogs = []; dividends = []; properties = []; rentals = []; certificates = []; books = [];
   document.getElementById('loginScreen').classList.remove('hidden');
   const pwField = document.getElementById('li-pw');
   if (pwField) pwField.value = '';
