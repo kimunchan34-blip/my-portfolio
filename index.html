@@ -744,6 +744,32 @@ tbody tr:hover { background: var(--surface2); }
   max-width:280px; color:var(--text2); line-height:1.5;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
+
+/* SEMINARS */
+.seminar-title-cell { display:flex; align-items:center; gap:10px; }
+.seminar-icon {
+  width:34px; height:34px; border-radius:9px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(6,182,212,.12); color:#06b6d4; font-size:16px;
+}
+.seminar-title { font-weight:700; font-size:13px; }
+.seminar-host { color:var(--text2); font-size:11px; margin-top:2px; }
+.seminar-type {
+  display:inline-flex; align-items:center; padding:3px 8px; border-radius:5px;
+  background:var(--surface2); color:var(--text2); font-size:10px; font-weight:700;
+  border:1px solid var(--border);
+}
+.seminar-status {
+  display:inline-flex; align-items:center; padding:3px 8px; border-radius:5px;
+  font-size:10px; font-weight:700; border:1px solid transparent;
+}
+.seminar-status.attended { background:var(--up-dim); color:var(--up); border-color:rgba(0,217,126,.2); }
+.seminar-status.scheduled { background:rgba(59,130,246,.12); color:var(--accent); border-color:rgba(59,130,246,.2); }
+.seminar-status.cancelled { background:rgba(100,116,139,.12); color:var(--flat); border-color:rgba(100,116,139,.2); }
+.seminar-note {
+  max-width:280px; color:var(--text2); line-height:1.5;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
 </style>
 </head>
 <body>
@@ -815,6 +841,9 @@ tbody tr:hover { background: var(--surface2); }
     </div>
     <div class="nav-item" onclick="nav('books')">
       <span class="ni">📚</span> 도서 관리
+    </div>
+    <div class="nav-item" onclick="nav('seminars')">
+      <span class="ni">🎓</span> 세미나 관리
     </div>
     <div class="nav-item" onclick="nav('ai')">
       <span class="ni">🤖</span> AI 분석
@@ -1397,6 +1426,82 @@ tbody tr:hover { background: var(--surface2); }
   </div>
 </div>
 
+<!-- SEMINARS -->
+<div id="page-seminars" class="page">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>🎓 세미나 관리</h1>
+      <p style="font-size:12px;color:var(--text2);margin-top:4px">참석한 세미나와 예정된 교육, 핵심 내용과 소감을 기록합니다</p>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost" onclick="exportSeminarCSV()">📤 CSV 내보내기</button>
+      <button class="btn btn-primary" onclick="openAddSeminar()">＋ 세미나 추가</button>
+    </div>
+  </div>
+
+  <div class="summary-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="sum-card" style="--grad:linear-gradient(90deg,#06b6d4,#3b82f6)">
+      <div class="sum-icon">🎓</div>
+      <div class="sum-label">총 세미나</div>
+      <div class="sum-value" id="seminar-total">0</div>
+      <div class="sum-sub">등록된 참석 정보</div>
+    </div>
+    <div class="sum-card" style="--grad:linear-gradient(90deg,#00d97e,#84cc16)">
+      <div class="sum-icon">✅</div>
+      <div class="sum-label">참석 완료</div>
+      <div class="sum-value" id="seminar-attended">0</div>
+      <div class="sum-sub">참석한 세미나</div>
+    </div>
+    <div class="sum-card" style="--grad:linear-gradient(90deg,#f59e0b,#f97316)">
+      <div class="sum-icon">📅</div>
+      <div class="sum-label">예정</div>
+      <div class="sum-value" id="seminar-scheduled">0</div>
+      <div class="sum-sub">앞으로 참석 예정</div>
+    </div>
+    <div class="sum-card" style="--grad:linear-gradient(90deg,#818cf8,#a855f7)">
+      <div class="sum-icon">₩</div>
+      <div class="sum-label">총 비용</div>
+      <div class="sum-value" id="seminar-cost">0</div>
+      <div class="sum-sub">등록비/참가비 합계</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="seminarSearch" placeholder="세미나명, 주최, 주제, 소감 검색" oninput="renderSeminars()">
+    </div>
+    <select class="filter-sel" id="seminarStatusFilter" onchange="renderSeminars()">
+      <option value="">전체 상태</option>
+      <option value="attended">참석 완료</option>
+      <option value="scheduled">예정</option>
+      <option value="cancelled">취소/불참</option>
+    </select>
+    <select class="filter-sel" id="seminarTypeFilter" onchange="renderSeminars()">
+      <option value="">전체 유형</option>
+      <option value="온라인">온라인</option>
+      <option value="오프라인">오프라인</option>
+      <option value="웨비나">웨비나</option>
+      <option value="컨퍼런스">컨퍼런스</option>
+      <option value="교육">교육</option>
+      <option value="기타">기타</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>세미나</th><th>유형</th><th>상태</th><th>일자/시간</th>
+        <th>장소</th><th class="right">비용</th><th>소감/핵심 내용</th><th>관리</th>
+      </tr></thead>
+      <tbody id="seminarTable"></tbody>
+    </table>
+    <div id="seminarEmpty" class="empty" style="display:none">
+      <div class="ei">🎓</div><p>조건에 맞는 세미나 기록이 없습니다</p>
+    </div>
+  </div>
+</div>
+
 <!-- ── AI CHATBOT ── -->
 <div id="page-ai" class="page">
   <div class="topbar">
@@ -1862,6 +1967,77 @@ tbody tr:hover { background: var(--surface2); }
   </div>
 </div>
 
+<!-- MODAL: SEMINAR -->
+<div class="overlay" id="seminarModal" onclick="closeModal('seminarModal',event)">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="seminarModalTitle">세미나 추가</h3>
+      <button class="modal-close" onclick="closeSeminarModal()">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <div class="form-label">세미나명 *</div>
+        <input class="form-input" id="seminar-title" placeholder="예: AI 투자 전략 세미나">
+      </div>
+      <div class="form-group">
+        <div class="form-label">주최/기관</div>
+        <input class="form-input" id="seminar-host" placeholder="예: 한국경제, 금융투자협회">
+      </div>
+      <div class="form-group">
+        <div class="form-label">유형</div>
+        <select class="form-select" id="seminar-type">
+          <option value="온라인">온라인</option>
+          <option value="오프라인">오프라인</option>
+          <option value="웨비나">웨비나</option>
+          <option value="컨퍼런스">컨퍼런스</option>
+          <option value="교육">교육</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">상태</div>
+        <select class="form-select" id="seminar-status">
+          <option value="attended">참석 완료</option>
+          <option value="scheduled">예정</option>
+          <option value="cancelled">취소/불참</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">참석일</div>
+        <input class="form-input" id="seminar-date" type="date">
+      </div>
+      <div class="form-group">
+        <div class="form-label">시간</div>
+        <input class="form-input" id="seminar-time" placeholder="예: 14:00~17:00">
+      </div>
+      <div class="form-group">
+        <div class="form-label">장소/접속 링크</div>
+        <input class="form-input" id="seminar-location" placeholder="예: 코엑스 / Zoom URL">
+      </div>
+      <div class="form-group">
+        <div class="form-label">비용</div>
+        <input class="form-input" id="seminar-cost-input" type="number" min="0" step="1000" placeholder="0">
+      </div>
+      <div class="form-group full">
+        <div class="form-label">주제/키워드</div>
+        <input class="form-input" id="seminar-topic" placeholder="예: AI, 자산배분, 리더십">
+      </div>
+      <div class="form-group full">
+        <div class="form-label">핵심 내용</div>
+        <textarea class="form-input" id="seminar-summary" rows="3" placeholder="세미나에서 배운 주요 내용"></textarea>
+      </div>
+      <div class="form-group full">
+        <div class="form-label">간단 소감</div>
+        <textarea class="form-input" id="seminar-review" rows="3" placeholder="참석 후 느낀 점이나 적용해볼 점"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeSeminarModal()">취소</button>
+      <button class="btn btn-primary" onclick="saveSeminar()">저장</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toasts" id="toasts"></div>
 
@@ -1908,10 +2084,12 @@ let properties = [];
 let rentals    = [];
 let certificates = [];
 let books = [];
+let seminars = [];
 let editId     = null;
 let rePropEditId = null;
 let certEditId = null;
 let bookEditId = null;
+let seminarEditId = null;
 let calYear    = new Date().getFullYear();
 let calMonth   = new Date().getMonth();
 let _currentUid = null;
@@ -1933,8 +2111,8 @@ async function fsSave(uid,data) {
 async function saveAll() {
   lcSave('pf_holdings', holdings); lcSave('pf_daily', dailyLogs);
   lcSave('pf_div', dividends); lcSave('pf_props', properties); lcSave('pf_rentals', rentals);
-  lcSave('pf_certs', certificates); lcSave('pf_books', books);
-  if (_currentUid) fsSave(_currentUid, { holdings, dailyLogs, dividends, properties, rentals, certificates, books, updatedAt: new Date().toISOString() });
+  lcSave('pf_certs', certificates); lcSave('pf_books', books); lcSave('pf_seminars', seminars);
+  if (_currentUid) fsSave(_currentUid, { holdings, dailyLogs, dividends, properties, rentals, certificates, books, seminars, updatedAt: new Date().toISOString() });
 }
 
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
@@ -1963,9 +2141,10 @@ async function loadUserData(user) {
     rentals    = remote.rentals    || [];
     certificates = remote.certificates || [];
     books = remote.books || [];
+    seminars = remote.seminars || [];
     lcSave('pf_holdings',holdings); lcSave('pf_daily',dailyLogs);
     lcSave('pf_div',dividends); lcSave('pf_props',properties); lcSave('pf_rentals',rentals);
-    lcSave('pf_certs',certificates); lcSave('pf_books',books);
+    lcSave('pf_certs',certificates); lcSave('pf_books',books); lcSave('pf_seminars',seminars);
   } else {
     holdings   = lcLoad('pf_holdings',  sampleHoldings());
     dailyLogs  = lcLoad('pf_daily',     sampleDaily());
@@ -1974,6 +2153,7 @@ async function loadUserData(user) {
     rentals    = lcLoad('pf_rentals',   sampleRentals());
     certificates = lcLoad('pf_certs',   sampleCerts());
     books = lcLoad('pf_books',          sampleBooks());
+    seminars = lcLoad('pf_seminars',    sampleSeminars());
     if (_fbReady) saveAll();
   }
   showLoadingOverlay(false);
@@ -2018,6 +2198,15 @@ function sampleBooks() {
     { id:'b1', title:'돈의 심리학', author:'모건 하우절', publisher:'인플루엔셜', category:'경제/경영', status:'done', rating:5, started:`${y}-01-05`, finished:`${y}-01-18`, review:'투자는 숫자보다 행동과 습관의 문제라는 점이 오래 남았다.', memo:'재독 추천' },
     { id:'b2', title:'원씽', author:'게리 켈러', publisher:'비즈니스북스', category:'자기계발', status:'done', rating:4, started:`${y}-02-03`, finished:`${y}-02-12`, review:'중요한 한 가지를 먼저 정하는 기준이 명확해졌다.', memo:'' },
     { id:'b3', title:'클린 코드', author:'로버트 C. 마틴', publisher:'인사이트', category:'IT/과학', status:'reading', rating:0, started:`${y}-03-01`, finished:'', review:'작은 함수와 명확한 이름의 힘을 다시 느끼는 중.', memo:'천천히 읽기' },
+  ];
+}
+
+function sampleSeminars() {
+  const y = new Date().getFullYear();
+  return [
+    { id:'s1', title:'AI 투자 전략 세미나', host:'한국경제', type:'오프라인', status:'attended', date:`${y}-02-20`, time:'14:00~17:00', location:'코엑스', cost:50000, topic:'AI, 투자전략, 자산배분', summary:'AI 산업 사이클과 주요 기업의 밸류체인 흐름을 점검했다.', review:'포트폴리오에서 AI 테마 비중을 감정이 아니라 기준으로 관리해야겠다고 느꼈다.' },
+    { id:'s2', title:'데이터 분석 실무 웨비나', host:'데이터산업진흥원', type:'웨비나', status:'attended', date:`${y}-03-12`, time:'19:00~21:00', location:'온라인', cost:0, topic:'SQL, 대시보드, 자동화', summary:'분석 목적을 먼저 정의하고 지표를 설계하는 흐름을 다뤘다.', review:'도구보다 질문 설계가 먼저라는 점이 유용했다.' },
+    { id:'s3', title:'부동산 세금 개정 교육', host:'세무법인', type:'교육', status:'scheduled', date:`${y}-08-18`, time:'10:00~12:00', location:'서울 강남', cost:30000, topic:'양도세, 보유세, 절세', summary:'', review:'' },
   ];
 }
 
@@ -2066,6 +2255,7 @@ function nav(page) {
   if (page==='realestate')  { renderRealEstate(); reMaybeAutoRefresh(); }
   if (page==='certificates') renderCertificates();
   if (page==='books')       renderBooks();
+  if (page==='seminars')    renderSeminars();
   if (page==='ai')          initAiPage();
 }
 
@@ -2964,6 +3154,156 @@ function exportBookCSV() {
   a.download = `books_${fmt(new Date())}.csv`;
   a.click();
   toast('도서 CSV 다운로드 완료','ok');
+}
+
+// ════════════════════════════════════════
+//  SEMINARS
+// ════════════════════════════════════════
+const SEMINAR_STATUS = {
+  attended: { label:'참석 완료', cls:'attended' },
+  scheduled: { label:'예정', cls:'scheduled' },
+  cancelled: { label:'취소/불참', cls:'cancelled' },
+};
+
+function seminarStatusInfo(status) {
+  return SEMINAR_STATUS[status] || SEMINAR_STATUS.scheduled;
+}
+
+function seminarDateTime(s) {
+  if (s.date && s.time) return `${s.date} ${s.time}`;
+  return s.date || s.time || '-';
+}
+
+function renderSeminars() {
+  renderSeminarSummary();
+  const q = (document.getElementById('seminarSearch')?.value || '').trim().toLowerCase();
+  const status = document.getElementById('seminarStatusFilter')?.value || '';
+  const type = document.getElementById('seminarTypeFilter')?.value || '';
+  const tbody = document.getElementById('seminarTable');
+  const empty = document.getElementById('seminarEmpty');
+  if (!tbody || !empty) return;
+
+  const rows = seminars
+    .filter(s => !q || [s.title,s.host,s.type,s.location,s.topic,s.summary,s.review].some(v => String(v||'').toLowerCase().includes(q)))
+    .filter(s => !status || s.status === status)
+    .filter(s => !type || s.type === type)
+    .sort((a,b) => (b.date || '').localeCompare(a.date || '') || (a.title||'').localeCompare(b.title||''));
+
+  if (!rows.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML = rows.map(s => {
+    const st = seminarStatusInfo(s.status);
+    const note = s.review || s.summary || '-';
+    return `
+      <tr>
+        <td>
+          <div class="seminar-title-cell">
+            <div class="seminar-icon">🎓</div>
+            <div><div class="seminar-title">${esc(s.title)}</div><div class="seminar-host">${esc(s.host || '주최 미입력')} · ${esc(s.topic || '주제 미입력')}</div></div>
+          </div>
+        </td>
+        <td><span class="seminar-type">${esc(s.type || '기타')}</span></td>
+        <td><span class="seminar-status ${st.cls}">${st.label}</span></td>
+        <td style="font-family:var(--mono);color:var(--text2)">${esc(seminarDateTime(s))}</td>
+        <td>${esc(s.location || '-')}</td>
+        <td class="right" style="font-family:var(--mono)">₩${fmtNum(s.cost || 0)}</td>
+        <td><div class="seminar-note" title="${esc(note)}">${esc(note)}</div></td>
+        <td>
+          <button class="btn btn-ghost btn-sm" onclick="openEditSeminar('${s.id}')">수정</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteSeminar('${s.id}')">삭제</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderSeminarSummary() {
+  const attended = seminars.filter(s => s.status === 'attended').length;
+  const scheduled = seminars.filter(s => s.status === 'scheduled').length;
+  const cost = seminars.reduce((sum,s)=>sum+(parseInt(s.cost)||0),0);
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('seminar-total', seminars.length);
+  set('seminar-attended', attended);
+  set('seminar-scheduled', scheduled);
+  set('seminar-cost', fmtNum(cost));
+}
+
+function openAddSeminar() {
+  seminarEditId = null;
+  document.getElementById('seminarModalTitle').textContent = '세미나 추가';
+  ['seminar-title','seminar-host','seminar-date','seminar-time','seminar-location','seminar-cost-input','seminar-topic','seminar-summary','seminar-review'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('seminar-type').value = '오프라인';
+  document.getElementById('seminar-status').value = 'attended';
+  document.getElementById('seminarModal').classList.add('open');
+}
+
+function openEditSeminar(id) {
+  const s = seminars.find(x => x.id === id); if (!s) return;
+  seminarEditId = id;
+  document.getElementById('seminarModalTitle').textContent = '세미나 수정';
+  document.getElementById('seminar-title').value = s.title || '';
+  document.getElementById('seminar-host').value = s.host || '';
+  document.getElementById('seminar-type').value = s.type || '기타';
+  document.getElementById('seminar-status').value = s.status || 'scheduled';
+  document.getElementById('seminar-date').value = s.date || '';
+  document.getElementById('seminar-time').value = s.time || '';
+  document.getElementById('seminar-location').value = s.location || '';
+  document.getElementById('seminar-cost-input').value = s.cost || '';
+  document.getElementById('seminar-topic').value = s.topic || '';
+  document.getElementById('seminar-summary').value = s.summary || '';
+  document.getElementById('seminar-review').value = s.review || '';
+  document.getElementById('seminarModal').classList.add('open');
+}
+
+function closeSeminarModal() { document.getElementById('seminarModal').classList.remove('open'); }
+
+function saveSeminar() {
+  const title = document.getElementById('seminar-title').value.trim();
+  if (!title) { toast('세미나명을 입력하세요', 'err'); return; }
+  const data = {
+    title,
+    host: document.getElementById('seminar-host').value.trim(),
+    type: document.getElementById('seminar-type').value,
+    status: document.getElementById('seminar-status').value,
+    date: document.getElementById('seminar-date').value,
+    time: document.getElementById('seminar-time').value.trim(),
+    location: document.getElementById('seminar-location').value.trim(),
+    cost: parseInt(document.getElementById('seminar-cost-input').value) || 0,
+    topic: document.getElementById('seminar-topic').value.trim(),
+    summary: document.getElementById('seminar-summary').value.trim(),
+    review: document.getElementById('seminar-review').value.trim(),
+  };
+  if (seminarEditId) {
+    const i = seminars.findIndex(s => s.id === seminarEditId);
+    seminars[i] = { ...seminars[i], ...data };
+    toast(`${title} 수정 완료`, 'ok');
+  } else {
+    seminars.push({ id:uid(), ...data });
+    toast(`${title} 추가 완료`, 'ok');
+  }
+  saveAll();
+  closeSeminarModal();
+  renderSeminars();
+}
+
+function deleteSeminar(id) {
+  const s = seminars.find(x => x.id === id); if (!s) return;
+  if (!confirm(`"${s.title}" 세미나 기록을 삭제하시겠습니까?`)) return;
+  seminars = seminars.filter(x => x.id !== id);
+  saveAll();
+  renderSeminars();
+  toast(`${s.title} 삭제 완료`, 'info');
+}
+
+function exportSeminarCSV() {
+  const rows = [['세미나명','주최/기관','유형','상태','참석일','시간','장소/링크','비용','주제/키워드','핵심 내용','간단 소감']];
+  seminars.forEach(s => rows.push([s.title,s.host,s.type,seminarStatusInfo(s.status).label,s.date,s.time,s.location,s.cost,s.topic,s.summary,s.review]));
+  const csv = rows.map(r=>r.map(v=>`"${String(v ?? '').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
+  a.download = `seminars_${fmt(new Date())}.csv`;
+  a.click();
+  toast('세미나 CSV 다운로드 완료','ok');
 }
 
 // ════════════════════════════════════════
@@ -3888,6 +4228,7 @@ async function doLogin() {
   rentals    = lcLoad('pf_rentals',   sampleRentals());
   certificates = lcLoad('pf_certs',   sampleCerts());
   books = lcLoad('pf_books',          sampleBooks());
+  seminars = lcLoad('pf_seminars',    sampleSeminars());
   document.getElementById('loginScreen').classList.add('hidden');
   enterApp({ displayName: '관리자', email: 'local@local' });
   btn.disabled = false; btn.textContent = '접속';
@@ -3896,7 +4237,7 @@ async function doLogin() {
 async function doLogout() {
   if (!confirm('로그아웃 하시겠습니까?')) return;
   _currentUid = null;
-  holdings = []; dailyLogs = []; dividends = []; properties = []; rentals = []; certificates = []; books = [];
+  holdings = []; dailyLogs = []; dividends = []; properties = []; rentals = []; certificates = []; books = []; seminars = [];
   document.getElementById('loginScreen').classList.remove('hidden');
   const pwField = document.getElementById('li-pw');
   if (pwField) pwField.value = '';
