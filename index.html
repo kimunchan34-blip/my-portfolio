@@ -824,9 +824,6 @@ tbody tr:hover { background: var(--surface2); }
     <div class="nav-item" onclick="nav('holdings')">
       <span class="ni">📊</span> 보유 종목
     </div>
-    <div class="nav-item" onclick="nav('daily')">
-      <span class="ni">📅</span> 일별 손익
-    </div>
     <div class="nav-item" onclick="nav('dividend')">
       <span class="ni">💰</span> 배당금 관리
     </div>
@@ -878,7 +875,6 @@ tbody tr:hover { background: var(--surface2); }
       <div class="topbar-right">
         <button class="btn btn-ghost" id="btnFetchAll" onclick="fetchAllPrices()">⚡ 시세 자동 갱신</button>
         <button class="btn btn-ghost" onclick="openAddHolding()">＋ 종목 추가</button>
-        <button class="btn btn-primary" onclick="openDailyLog()">📝 일별 기록</button>
       </div>
     </div>
 
@@ -1005,50 +1001,6 @@ tbody tr:hover { background: var(--surface2); }
       </table>
       <div id="holdEmpty" class="empty" style="display:none">
         <div class="ei">📋</div><p>조건에 맞는 종목이 없습니다</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── DAILY ── -->
-  <div id="page-daily" class="page">
-    <div class="topbar">
-      <div class="topbar-left"><h1>일별 손익 기록</h1></div>
-      <div class="topbar-right">
-        <button class="btn btn-primary" onclick="openDailyLog()">＋ 오늘 기록 추가</button>
-      </div>
-    </div>
-    <!-- daily summary cards -->
-    <div class="summary-grid" style="grid-template-columns:repeat(3,1fr)">
-      <div class="sum-card" style="--grad:linear-gradient(90deg,#3b82f6,#818cf8)">
-        <div class="sum-label">이번 달 손익</div>
-        <div class="sum-value" id="d-month">₩0</div>
-        <div class="sum-sub" id="d-month-sub">—</div>
-      </div>
-      <div class="sum-card" style="--grad:linear-gradient(90deg,#00d97e,#06b6d4)">
-        <div class="sum-label">올해 누적 손익</div>
-        <div class="sum-value" id="d-year">₩0</div>
-        <div class="sum-sub" id="d-year-sub">—</div>
-      </div>
-      <div class="sum-card" style="--grad:linear-gradient(90deg,#f59e0b,#f97316)">
-        <div class="sum-label">총 기록 건수</div>
-        <div class="sum-value" id="d-count">0</div>
-        <div class="sum-sub">일별 손익 기록</div>
-      </div>
-    </div>
-    <div class="section-header" style="margin-top:4px">
-      <div><div class="section-title">손익 기록 목록</div></div>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr>
-          <th>날짜</th><th>종목</th><th>증권사</th><th>구분</th>
-          <th class="right">시가</th><th class="right">종가</th>
-          <th class="right">등락액</th><th class="right">등락률</th><th>메모</th><th>삭제</th>
-        </tr></thead>
-        <tbody id="dailyTable"></tbody>
-      </table>
-      <div id="dailyEmpty" class="empty" style="display:none">
-        <div class="ei">📅</div><p>일별 손익 기록을 추가해 주세요</p>
       </div>
     </div>
   </div>
@@ -1628,42 +1580,6 @@ tbody tr:hover { background: var(--surface2); }
     <div class="modal-foot">
       <button class="btn btn-ghost" onclick="close1()">취소</button>
       <button class="btn btn-primary" onclick="saveHolding()">저장</button>
-    </div>
-  </div>
-</div>
-
-<!-- ── MODAL: 일별 기록 ── -->
-<div class="overlay" id="dailyModal" onclick="closeModal('dailyModal',event)">
-  <div class="modal modal-sm">
-    <div class="modal-head">
-      <h3>일별 손익 기록</h3>
-      <button class="modal-close" onclick="close2()">✕</button>
-    </div>
-    <div class="form-group">
-      <div class="form-label">날짜</div>
-      <input class="form-input" id="dl-date" type="date">
-    </div>
-    <div class="form-group">
-      <div class="form-label">종목 선택</div>
-      <select class="form-select" id="dl-holding"></select>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <div class="form-label">시가 (원/달러)</div>
-        <input class="form-input" id="dl-open" type="number" step="0.01" placeholder="0">
-      </div>
-      <div class="form-group">
-        <div class="form-label">종가 (원/달러)</div>
-        <input class="form-input" id="dl-close" type="number" step="0.01" placeholder="0">
-      </div>
-    </div>
-    <div class="form-group">
-      <div class="form-label">메모</div>
-      <input class="form-input" id="dl-memo" placeholder="특이사항, 이슈 등">
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-ghost" onclick="close2()">취소</button>
-      <button class="btn btn-primary" onclick="saveDailyLog()">저장</button>
     </div>
   </div>
 </div>
@@ -2249,7 +2165,6 @@ function nav(page) {
   document.querySelector(`.nav-item[onclick="nav('${page}')"]`).classList.add('active');
   if (page==='dashboard')   renderDashboard();
   if (page==='holdings')    renderHoldings();
-  if (page==='daily')       renderDaily();
   if (page==='dividend')    renderDividend();
   if (page==='quote')       renderQuote();
   if (page==='realestate')  { renderRealEstate(); reMaybeAutoRefresh(); }
@@ -2459,57 +2374,6 @@ function renderHoldings() {
 function brokerBadge(b) {
   const info = BROKERS[b]||{color:'#64748b'};
   return `<span style="font-size:11px;font-weight:700;color:${info.color}">${b}</span>`;
-}
-
-// ════════════════════════════════════════
-//  DAILY
-// ════════════════════════════════════════
-function renderDaily() {
-  const now = new Date();
-  const thisMonth = now.toISOString().slice(0,7);
-  const thisYear  = now.getFullYear().toString();
-
-  const mLogs = dailyLogs.filter(d=>d.date.startsWith(thisMonth));
-  const yLogs = dailyLogs.filter(d=>d.date.startsWith(thisYear));
-
-  const calcPnl = logs => logs.reduce((s,d)=>{
-    const h = holdings.find(h=>h.id===d.holdingId);
-    const qty = h ? h.qty : 0;
-    return s + (d.close-d.open)*qty;
-  },0);
-
-  const mPnl = calcPnl(mLogs), yPnl = calcPnl(yLogs);
-  document.getElementById('d-month').textContent = (mPnl>=0?'+':'')+'₩'+fmtNum(mPnl);
-  document.getElementById('d-month').className='sum-value '+cls(mPnl);
-  document.getElementById('d-month-sub').textContent = thisMonth+' 기준';
-  document.getElementById('d-year').textContent = (yPnl>=0?'+':'')+'₩'+fmtNum(yPnl);
-  document.getElementById('d-year').className='sum-value '+cls(yPnl);
-  document.getElementById('d-year-sub').textContent = thisYear+'년 기준';
-  document.getElementById('d-count').textContent = dailyLogs.length;
-
-  const tbody = document.getElementById('dailyTable');
-  const empty = document.getElementById('dailyEmpty');
-  const sorted = [...dailyLogs].sort((a,b)=>b.date.localeCompare(a.date));
-  if (!sorted.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
-  empty.style.display='none';
-  tbody.innerHTML = sorted.map(d=>{
-    const h = holdings.find(x=>x.id===d.holdingId);
-    const diff = d.close - d.open;
-    const pct  = d.open ? diff/d.open*100 : 0;
-    const pnl  = h ? diff*h.qty : diff;
-    return `<tr>
-      <td style="font-family:var(--mono);font-size:11px">${d.date}</td>
-      <td style="font-weight:700">${h?h.name:'—'}</td>
-      <td>${h?brokerBadge(h.broker):'—'}</td>
-      <td><span class="market-badge ${diff>=0?'badge-kr':'badge-us'}">${diff>=0?'상승':'하락'}</span></td>
-      <td class="right" style="font-family:var(--mono)">${fmtNum(d.open)}</td>
-      <td class="right" style="font-family:var(--mono)">${fmtNum(d.close)}</td>
-      <td class="right pnl-cell ${cls(diff)}">${sign(diff)}${fmtNum(Math.abs(diff))}</td>
-      <td class="right pnl-cell ${cls(pct)}">${sign(pct)}${Math.abs(pct).toFixed(2)}%</td>
-      <td style="color:var(--text2);font-size:11px">${d.memo||'—'}</td>
-      <td><button class="btn btn-danger btn-sm" onclick="deleteDaily('${d.id}')">삭제</button></td>
-    </tr>`;
-  }).join('');
 }
 
 // ════════════════════════════════════════
@@ -2807,31 +2671,6 @@ function deleteHolding(id) {
   save('pf_holdings', holdings);
   toast(`${h.name} 삭제 완료`, 'info');
   renderHoldings(); renderDashboard();
-}
-
-function openDailyLog() {
-  document.getElementById('dl-date').value = fmt(new Date());
-  const sel = document.getElementById('dl-holding');
-  sel.innerHTML = holdings.map(h=>`<option value="${h.id}">${h.name} (${h.ticker})</option>`).join('');
-  ['dl-open','dl-close','dl-memo'].forEach(id=>{ const el=document.getElementById(id); if(el.type==='number') el.value=''; else el.value=''; });
-  document.getElementById('dailyModal').classList.add('open');
-}
-function close2() { document.getElementById('dailyModal').classList.remove('open'); }
-
-function saveDailyLog() {
-  const date  = document.getElementById('dl-date').value;
-  const hId   = document.getElementById('dl-holding').value;
-  const open  = parseFloat(document.getElementById('dl-open').value)||0;
-  const close = parseFloat(document.getElementById('dl-close').value)||0;
-  if (!date||!hId) { toast('날짜와 종목을 선택하세요','err'); return; }
-  dailyLogs.push({ id:uid(), date, holdingId:hId, open, close, memo:document.getElementById('dl-memo').value.trim() });
-  save('pf_daily', dailyLogs);
-  close2(); toast('일별 기록 저장 완료', 'ok'); renderDaily();
-}
-
-function deleteDaily(id) {
-  dailyLogs = dailyLogs.filter(d=>d.id!==id);
-  save('pf_daily', dailyLogs); renderDaily(); toast('기록 삭제','info');
 }
 
 function openAddDiv() {
@@ -4057,10 +3896,7 @@ ${holdingLines||'  (없음)'}
 
 ■ 부동산 (${properties.length}건)
 연간임대수익: ${annRental.toLocaleString()}만원
-${propLines||'  (없음)'}
-
-■ 최근 손익 기록
-${dailyLogs.slice(-5).map(d=>`  - ${d.date}: ${d.close>=0?'+':''}${(d.close||0).toLocaleString()}`).join('\n')||'  (없음)'}`.trim();
+${propLines||'  (없음)'}`.trim();
 }
 
 // ── 메시지 렌더 ──
