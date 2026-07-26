@@ -698,6 +698,29 @@ tbody tr:hover { background: var(--surface2); }
   border-radius: 8px; color: var(--text2); font-size: 12px; font-family: inherit; outline: none;
 }
 .filter-sel:focus { border-color: var(--accent); color: var(--text); }
+
+/* CERTIFICATIONS */
+.cert-title-cell { display:flex; align-items:center; gap:10px; }
+.cert-icon {
+  width:34px; height:34px; border-radius:9px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(59,130,246,.12); color:var(--accent); font-size:16px;
+}
+.cert-name { font-weight:700; font-size:13px; }
+.cert-org { color:var(--text2); font-size:11px; margin-top:2px; }
+.cert-status {
+  display:inline-flex; align-items:center; padding:3px 8px; border-radius:5px;
+  font-size:10px; font-weight:700; border:1px solid transparent;
+}
+.cert-status.active { background:var(--up-dim); color:var(--up); border-color:rgba(0,217,126,.2); }
+.cert-status.soon { background:var(--gold-dim); color:var(--gold); border-color:rgba(245,158,11,.2); }
+.cert-status.expired { background:var(--down-dim); color:var(--down); border-color:rgba(255,77,109,.2); }
+.cert-status.none { background:rgba(100,116,139,.12); color:var(--flat); border-color:rgba(100,116,139,.2); }
+.cert-chip {
+  display:inline-flex; align-items:center; padding:3px 8px; border-radius:5px;
+  background:var(--surface2); color:var(--text2); font-size:10px; font-weight:700;
+  border:1px solid var(--border);
+}
 </style>
 </head>
 <body>
@@ -763,6 +786,9 @@ tbody tr:hover { background: var(--surface2); }
     </div>
     <div class="nav-item" onclick="nav('realestate')">
       <span class="ni">🏢</span> 부동산
+    </div>
+    <div class="nav-item" onclick="nav('certificates')">
+      <span class="ni">📜</span> 자격증 관리
     </div>
     <div class="nav-item" onclick="nav('ai')">
       <span class="ni">🤖</span> AI 분석
@@ -1192,6 +1218,82 @@ tbody tr:hover { background: var(--surface2); }
   </div>
 </div>
 
+<!-- CERTIFICATES -->
+<div id="page-certificates" class="page">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>📜 자격증 관리</h1>
+      <p style="font-size:12px;color:var(--text2);margin-top:4px">보유 자격증, 취득일, 갱신/만료일을 한 화면에서 관리합니다</p>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-ghost" onclick="exportCertCSV()">📤 CSV 내보내기</button>
+      <button class="btn btn-primary" onclick="openAddCert()">＋ 자격증 추가</button>
+    </div>
+  </div>
+
+  <div class="summary-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="sum-card" style="--grad:linear-gradient(90deg,#3b82f6,#06b6d4)">
+      <div class="sum-icon">📜</div>
+      <div class="sum-label">총 자격증</div>
+      <div class="sum-value" id="cert-total">0</div>
+      <div class="sum-sub">등록된 자격증</div>
+    </div>
+    <div class="sum-card" style="--grad:linear-gradient(90deg,#00d97e,#84cc16)">
+      <div class="sum-icon">✅</div>
+      <div class="sum-label">유효</div>
+      <div class="sum-value" id="cert-active">0</div>
+      <div class="sum-sub">현재 사용 가능</div>
+    </div>
+    <div class="sum-card" style="--grad:linear-gradient(90deg,#f59e0b,#f97316)">
+      <div class="sum-icon">⏱</div>
+      <div class="sum-label">갱신 예정</div>
+      <div class="sum-value" id="cert-soon">0</div>
+      <div class="sum-sub">90일 이내 만료</div>
+    </div>
+    <div class="sum-card" style="--grad:linear-gradient(90deg,#ff4d6d,#f43f5e)">
+      <div class="sum-icon">⚠</div>
+      <div class="sum-label">만료</div>
+      <div class="sum-value" id="cert-expired">0</div>
+      <div class="sum-sub">갱신 필요</div>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="certSearch" placeholder="자격증명, 발급기관, 자격번호 검색" oninput="renderCertificates()">
+    </div>
+    <select class="filter-sel" id="certCategoryFilter" onchange="renderCertificates()">
+      <option value="">전체 분야</option>
+      <option value="금융">금융</option>
+      <option value="IT">IT</option>
+      <option value="어학">어학</option>
+      <option value="안전">안전</option>
+      <option value="기타">기타</option>
+    </select>
+    <select class="filter-sel" id="certStatusFilter" onchange="renderCertificates()">
+      <option value="">전체 상태</option>
+      <option value="active">유효</option>
+      <option value="soon">갱신 예정</option>
+      <option value="expired">만료</option>
+      <option value="none">만료일 없음</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>자격증</th><th>분야</th><th>자격번호</th><th>취득일</th>
+        <th>만료/갱신일</th><th>상태</th><th>메모</th><th>관리</th>
+      </tr></thead>
+      <tbody id="certTable"></tbody>
+    </table>
+    <div id="certEmpty" class="empty" style="display:none">
+      <div class="ei">📜</div><p>조건에 맞는 자격증이 없습니다</p>
+    </div>
+  </div>
+</div>
+
 <!-- ── AI CHATBOT ── -->
 <div id="page-ai" class="page">
   <div class="topbar">
@@ -1531,6 +1633,57 @@ tbody tr:hover { background: var(--surface2); }
   </div>
 </div>
 
+<!-- MODAL: CERTIFICATE -->
+<div class="overlay" id="certModal" onclick="closeModal('certModal',event)">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="certModalTitle">자격증 추가</h3>
+      <button class="modal-close" onclick="closeCertModal()">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <div class="form-label">자격증명 *</div>
+        <input class="form-input" id="cert-name" placeholder="예: 투자자산운용사">
+      </div>
+      <div class="form-group">
+        <div class="form-label">발급기관 *</div>
+        <input class="form-input" id="cert-org" placeholder="예: 금융투자협회">
+      </div>
+      <div class="form-group">
+        <div class="form-label">분야</div>
+        <select class="form-select" id="cert-category">
+          <option value="금융">금융</option>
+          <option value="IT">IT</option>
+          <option value="어학">어학</option>
+          <option value="안전">안전</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <div class="form-label">자격번호</div>
+        <input class="form-input" id="cert-number" placeholder="등록번호 또는 인증번호">
+      </div>
+      <div class="form-group">
+        <div class="form-label">취득일</div>
+        <input class="form-input" id="cert-issued" type="date">
+      </div>
+      <div class="form-group">
+        <div class="form-label">만료/갱신일</div>
+        <input class="form-input" id="cert-expires" type="date">
+        <div class="form-hint">만료일이 없는 자격증은 비워두세요.</div>
+      </div>
+      <div class="form-group full">
+        <div class="form-label">메모</div>
+        <input class="form-input" id="cert-memo" placeholder="갱신 조건, 교육 이수, 보관 위치 등">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeCertModal()">취소</button>
+      <button class="btn btn-primary" onclick="saveCert()">저장</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toasts" id="toasts"></div>
 
@@ -1575,8 +1728,10 @@ let dailyLogs  = [];
 let dividends  = [];
 let properties = [];
 let rentals    = [];
+let certificates = [];
 let editId     = null;
 let rePropEditId = null;
+let certEditId = null;
 let calYear    = new Date().getFullYear();
 let calMonth   = new Date().getMonth();
 let _currentUid = null;
@@ -1598,7 +1753,8 @@ async function fsSave(uid,data) {
 async function saveAll() {
   lcSave('pf_holdings', holdings); lcSave('pf_daily', dailyLogs);
   lcSave('pf_div', dividends); lcSave('pf_props', properties); lcSave('pf_rentals', rentals);
-  if (_currentUid) fsSave(_currentUid, { holdings, dailyLogs, dividends, properties, rentals, updatedAt: new Date().toISOString() });
+  lcSave('pf_certs', certificates);
+  if (_currentUid) fsSave(_currentUid, { holdings, dailyLogs, dividends, properties, rentals, certificates, updatedAt: new Date().toISOString() });
 }
 
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
@@ -1625,14 +1781,17 @@ async function loadUserData(user) {
     dividends  = remote.dividends  || [];
     properties = remote.properties || [];
     rentals    = remote.rentals    || [];
+    certificates = remote.certificates || [];
     lcSave('pf_holdings',holdings); lcSave('pf_daily',dailyLogs);
     lcSave('pf_div',dividends); lcSave('pf_props',properties); lcSave('pf_rentals',rentals);
+    lcSave('pf_certs',certificates);
   } else {
     holdings   = lcLoad('pf_holdings',  sampleHoldings());
     dailyLogs  = lcLoad('pf_daily',     sampleDaily());
     dividends  = lcLoad('pf_div',       sampleDiv());
     properties = lcLoad('pf_props',     sampleProps());
     rentals    = lcLoad('pf_rentals',   sampleRentals());
+    certificates = lcLoad('pf_certs',   sampleCerts());
     if (_fbReady) saveAll();
   }
   showLoadingOverlay(false);
@@ -1659,6 +1818,15 @@ function sampleRentals() {
   const y = today.getFullYear();
   return [
     { id:'r1', propId:'p2', type:'월세', tenant:'김철수', deposit:2000, monthly:80, start:`${y-1}-08-01`, end:`${y+1}-07-31`, memo:'관리비 별도' },
+  ];
+}
+
+function sampleCerts() {
+  const y = new Date().getFullYear();
+  return [
+    { id:'c1', name:'투자자산운용사', org:'금융투자협회', category:'금융', number:'', issued:`${y-3}-06-15`, expires:'', memo:'실무 관련 핵심 자격' },
+    { id:'c2', name:'SQLD', org:'한국데이터산업진흥원', category:'IT', number:'', issued:`${y-2}-11-20`, expires:'', memo:'데이터 분석 기초' },
+    { id:'c3', name:'TOEIC Speaking', org:'ETS', category:'어학', number:'', issued:`${y-1}-09-10`, expires:`${y+1}-09-10`, memo:'2년 유효' },
   ];
 }
 
@@ -1704,7 +1872,8 @@ function nav(page) {
   if (page==='daily')       renderDaily();
   if (page==='dividend')    renderDividend();
   if (page==='quote')       renderQuote();
-  if (page==='realestate')  renderRealEstate();
+  if (page==='realestate')  { renderRealEstate(); reMaybeAutoRefresh(); }
+  if (page==='certificates') renderCertificates();
   if (page==='ai')          initAiPage();
 }
 
@@ -2308,6 +2477,148 @@ function deleteDiv(id) {
 function closeModal(id, e) { if(e.target===document.getElementById(id)) document.getElementById(id).classList.remove('open'); }
 
 // ════════════════════════════════════════
+//  CERTIFICATES
+// ════════════════════════════════════════
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function certStatus(c) {
+  if (!c.expires) return { key:'none', label:'만료일 없음', days:null };
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const exp = new Date(c.expires);
+  exp.setHours(0,0,0,0);
+  const days = Math.ceil((exp - today) / 86400000);
+  if (days < 0) return { key:'expired', label:'만료', days };
+  if (days <= 90) return { key:'soon', label:`D-${days}`, days };
+  return { key:'active', label:'유효', days };
+}
+
+function renderCertificates() {
+  renderCertSummary();
+  const q = (document.getElementById('certSearch')?.value || '').trim().toLowerCase();
+  const category = document.getElementById('certCategoryFilter')?.value || '';
+  const status = document.getElementById('certStatusFilter')?.value || '';
+  const tbody = document.getElementById('certTable');
+  const empty = document.getElementById('certEmpty');
+  if (!tbody || !empty) return;
+
+  const rows = certificates
+    .map(c => ({ ...c, _status: certStatus(c) }))
+    .filter(c => !q || [c.name,c.org,c.number,c.memo].some(v => String(v||'').toLowerCase().includes(q)))
+    .filter(c => !category || c.category === category)
+    .filter(c => !status || c._status.key === status)
+    .sort((a,b) => {
+      const ax = a.expires || '9999-12-31';
+      const bx = b.expires || '9999-12-31';
+      return ax.localeCompare(bx) || (a.name||'').localeCompare(b.name||'');
+    });
+
+  if (!rows.length) { tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML = rows.map(c => `
+    <tr>
+      <td>
+        <div class="cert-title-cell">
+          <div class="cert-icon">📜</div>
+          <div><div class="cert-name">${esc(c.name)}</div><div class="cert-org">${esc(c.org)}</div></div>
+        </div>
+      </td>
+      <td><span class="cert-chip">${esc(c.category || '기타')}</span></td>
+      <td style="font-family:var(--mono);color:var(--text2)">${esc(c.number || '-')}</td>
+      <td style="font-family:var(--mono)">${esc(c.issued || '-')}</td>
+      <td style="font-family:var(--mono)">${esc(c.expires || '-')}</td>
+      <td><span class="cert-status ${c._status.key}">${c._status.label}</span></td>
+      <td style="max-width:220px;color:var(--text2)">${esc(c.memo || '-')}</td>
+      <td>
+        <button class="btn btn-ghost btn-sm" onclick="openEditCert('${c.id}')">수정</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCert('${c.id}')">삭제</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function renderCertSummary() {
+  const counts = { active:0, soon:0, expired:0, none:0 };
+  certificates.forEach(c => counts[certStatus(c).key]++);
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('cert-total', certificates.length);
+  set('cert-active', counts.active + counts.none);
+  set('cert-soon', counts.soon);
+  set('cert-expired', counts.expired);
+}
+
+function openAddCert() {
+  certEditId = null;
+  document.getElementById('certModalTitle').textContent = '자격증 추가';
+  ['cert-name','cert-org','cert-number','cert-issued','cert-expires','cert-memo'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('cert-category').value = '금융';
+  document.getElementById('certModal').classList.add('open');
+}
+
+function openEditCert(id) {
+  const c = certificates.find(x => x.id === id); if (!c) return;
+  certEditId = id;
+  document.getElementById('certModalTitle').textContent = '자격증 수정';
+  document.getElementById('cert-name').value = c.name || '';
+  document.getElementById('cert-org').value = c.org || '';
+  document.getElementById('cert-category').value = c.category || '기타';
+  document.getElementById('cert-number').value = c.number || '';
+  document.getElementById('cert-issued').value = c.issued || '';
+  document.getElementById('cert-expires').value = c.expires || '';
+  document.getElementById('cert-memo').value = c.memo || '';
+  document.getElementById('certModal').classList.add('open');
+}
+
+function closeCertModal() { document.getElementById('certModal').classList.remove('open'); }
+
+function saveCert() {
+  const name = document.getElementById('cert-name').value.trim();
+  const org = document.getElementById('cert-org').value.trim();
+  if (!name || !org) { toast('자격증명과 발급기관을 입력하세요', 'err'); return; }
+  const data = {
+    name, org,
+    category: document.getElementById('cert-category').value,
+    number: document.getElementById('cert-number').value.trim(),
+    issued: document.getElementById('cert-issued').value,
+    expires: document.getElementById('cert-expires').value,
+    memo: document.getElementById('cert-memo').value.trim(),
+  };
+  if (certEditId) {
+    const i = certificates.findIndex(c => c.id === certEditId);
+    certificates[i] = { ...certificates[i], ...data };
+    toast(`${name} 수정 완료`, 'ok');
+  } else {
+    certificates.push({ id:uid(), ...data });
+    toast(`${name} 추가 완료`, 'ok');
+  }
+  saveAll();
+  closeCertModal();
+  renderCertificates();
+}
+
+function deleteCert(id) {
+  const c = certificates.find(x => x.id === id); if (!c) return;
+  if (!confirm(`"${c.name}" 자격증을 삭제하시겠습니까?`)) return;
+  certificates = certificates.filter(x => x.id !== id);
+  saveAll();
+  renderCertificates();
+  toast(`${c.name} 삭제 완료`, 'info');
+}
+
+function exportCertCSV() {
+  const rows = [['자격증명','발급기관','분야','자격번호','취득일','만료/갱신일','상태','메모']];
+  certificates.forEach(c => rows.push([c.name,c.org,c.category,c.number,c.issued,c.expires,certStatus(c).label,c.memo]));
+  const csv = rows.map(r=>r.map(v=>`"${String(v ?? '').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}));
+  a.download = `certificates_${fmt(new Date())}.csv`;
+  a.click();
+  toast('자격증 CSV 다운로드 완료','ok');
+}
+
+// ════════════════════════════════════════
 //  EXPORT CSV
 // ════════════════════════════════════════
 function exportCSV() {
@@ -2428,6 +2739,13 @@ function renderRePropGrid() {
     const up     = pnl >= 0;
     const yieldColor = gross>=5?'var(--up)':gross>=3?'var(--gold)':'var(--down)';
     const rsCnt  = rentals.filter(r=>r.propId===p.id && r.type!=='공실').length;
+    const reStatus = _reFetchStatus[p.id];
+    let priceBadge = '';
+    if (reStatus === 'loading') priceBadge = `<span class="price-status loading"><span class="spinner">↻</span> 조회중</span>`;
+    else if (reStatus === 'ok') priceBadge = `<span class="price-status ok">✓ 자동갱신</span>`;
+    else if (reStatus === 'err') priceBadge = `<span class="price-status err">✕ 실패</span>`;
+    else if (p.priceUpdatedAt) priceBadge = `<span class="price-status ok">${p.priceSource === 'molit' ? '실거래가' : '수동'} ${new Date(p.priceUpdatedAt).toLocaleDateString('ko-KR')}</span>`;
+    else priceBadge = `<span class="price-status wait">— 미갱신</span>`;
 
     return `
     <div class="re-prop-card">
@@ -2461,6 +2779,8 @@ function renderRePropGrid() {
         </div>
       </div>
       <div class="re-prop-footer">
+        ${priceBadge}
+        <button class="btn btn-ghost btn-sm" onclick="reFetchOne('${p.id}')" ${reStatus==='loading'?'disabled':''}>↻ 시세</button>
         <button class="btn btn-ghost btn-sm" onclick="openEditProp('${p.id}')">✏️ 편집</button>
         <button class="btn btn-ghost btn-sm" onclick="taxFillFrom('${p.id}')">🧮 양도세 계산</button>
         <button class="btn btn-ghost btn-sm" onclick="openAddRentalFor('${p.id}')">＋ 임대</button>
@@ -2544,8 +2864,13 @@ function saveProp() {
   };
   if (rePropEditId) {
     const idx = properties.findIndex(x=>x.id===rePropEditId);
+    const prev = properties[idx] || {};
+    obj.priceUpdatedAt = prev.price === obj.price ? prev.priceUpdatedAt : new Date().toISOString();
+    obj.priceSource = prev.price === obj.price ? prev.priceSource : 'manual';
     properties[idx] = obj;
   } else {
+    obj.priceUpdatedAt = obj.price ? new Date().toISOString() : '';
+    obj.priceSource = obj.price ? 'manual' : '';
     properties.push(obj);
   }
   saveAll();
@@ -2769,9 +3094,188 @@ function taxCalc() {
   `;
 }
 
-// ── 시세 갱신 (수동 입력 팝업 방식 — API 미지원) ──
-function reFetchAll() {
-  toast('부동산 시세는 네이버 부동산 등에서 확인 후 편집 버튼으로 직접 업데이트 해주세요', 'info');
+// ── 부동산 시세 자동 갱신 (국토교통부 실거래가 기반 추정) ──
+const MOLIT_APT_TRADE_URL = 'https://apis.data.go.kr/1613000/RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev';
+const RE_AUTO_REFRESH_HOURS = 24;
+const RE_LAWD_CODES = {
+  '종로구':'11110','중구':'11140','용산구':'11170','성동구':'11200','광진구':'11215','동대문구':'11230',
+  '중랑구':'11260','성북구':'11290','강북구':'11305','도봉구':'11320','노원구':'11350','은평구':'11380',
+  '서대문구':'11410','마포구':'11440','양천구':'11470','강서구':'11500','구로구':'11530','금천구':'11545',
+  '영등포구':'11560','동작구':'11590','관악구':'11620','서초구':'11650','강남구':'11680','송파구':'11710','강동구':'11740'
+};
+let _reFetchStatus = {};
+let _reFetching = false;
+let _reAutoStarted = false;
+
+function getMolitKey(ask=false) {
+  let key = '';
+  try { key = localStorage.getItem('molit_service_key') || ''; } catch(e) {}
+  if (!key && ask) {
+    key = prompt('공공데이터포털 국토교통부 실거래가 API 서비스키를 입력하세요.\n입력한 키는 이 브라우저에만 저장됩니다.') || '';
+    key = key.trim();
+    if (key) localStorage.setItem('molit_service_key', key);
+  }
+  return key;
+}
+
+function reExtractLawdCode(addr='') {
+  const explicit = addr.match(/\b\d{5}\b/);
+  if (explicit) return explicit[0];
+  const gu = Object.keys(RE_LAWD_CODES).find(name => addr.includes(name));
+  return gu ? RE_LAWD_CODES[gu] : '';
+}
+
+function reExtractDong(addr='') {
+  const m = addr.match(/([가-힣0-9]+동)\b/);
+  return m ? m[1] : '';
+}
+
+function reMonthOffset(offset) {
+  const d = new Date();
+  d.setMonth(d.getMonth() - offset);
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+function reAptSearchTokens(p) {
+  return `${p.name || ''} ${p.addr || ''}`.split(/[\s,()\-_/]+/)
+    .map(x=>x.trim())
+    .filter(x=>x.length >= 2 && !/^(서울|경기|인천|부산|대구|광주|대전|울산|세종|특별시|광역시|아파트|오피스텔)$/.test(x));
+}
+
+function reNum(v) {
+  return parseFloat(String(v || '').replace(/[^\d.]/g, '')) || 0;
+}
+
+function reParseDeals(xmlText) {
+  const xml = new DOMParser().parseFromString(xmlText, 'text/xml');
+  const items = [...xml.querySelectorAll('item')];
+  return items.map(item => {
+    const read = (...names) => {
+      for (const name of names) {
+        const node = item.querySelector(name);
+        if (node) return node.textContent.trim();
+      }
+      return '';
+    };
+    return {
+      apt: read('aptNm', '아파트'),
+      dong: read('umdNm', '법정동'),
+      area: reNum(read('excluUseAr', '전용면적')),
+      amount: reNum(read('dealAmount', '거래금액')),
+      year: read('dealYear', '년'),
+      month: read('dealMonth', '월'),
+      day: read('dealDay', '일')
+    };
+  }).filter(d => d.amount > 0);
+}
+
+async function reFetchMonth(lawdCode, dealYmd, key) {
+  const qs = `LAWD_CD=${encodeURIComponent(lawdCode)}&DEAL_YMD=${dealYmd}&serviceKey=${encodeURIComponent(key)}&numOfRows=1000&pageNo=1`;
+  const direct = `${MOLIT_APT_TRADE_URL}?${qs}`;
+  try {
+    const res = await fetch(direct, { signal: AbortSignal.timeout(9000) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.text();
+  } catch(e) {
+    const proxy = `https://api.allorigins.win/raw?url=${encodeURIComponent(direct)}`;
+    const res2 = await fetch(proxy, { signal: AbortSignal.timeout(9000) });
+    if (!res2.ok) throw new Error('HTTP ' + res2.status);
+    return await res2.text();
+  }
+}
+
+function rePickDeals(p, deals) {
+  const tokens = reAptSearchTokens(p);
+  const dong = reExtractDong(p.addr || '');
+  let picked = deals.filter(d => tokens.some(t => d.apt.includes(t) || t.includes(d.apt)));
+  if (dong) picked = picked.filter(d => !d.dong || d.dong.includes(dong.replace(/동$/, '')));
+  if (p.area) {
+    const areaPicked = picked.filter(d => d.area && Math.abs(d.area - p.area) <= Math.max(8, p.area * 0.18));
+    if (areaPicked.length) picked = areaPicked;
+  }
+  return picked;
+}
+
+async function reFetchOne(id, askKey=true) {
+  const p = properties.find(x=>x.id===id);
+  if (!p) return false;
+  if (p.type !== '아파트') {
+    _reFetchStatus[id] = 'err';
+    renderRePropGrid();
+    toast(`${p.name}은 현재 아파트 실거래가 자동 갱신만 지원합니다`, 'err');
+    return false;
+  }
+  const key = getMolitKey(askKey);
+  if (!key) {
+    if (askKey) toast('실거래가 API 서비스키가 필요합니다', 'err');
+    return false;
+  }
+  const lawdCode = reExtractLawdCode(p.addr || '');
+  if (!lawdCode) {
+    _reFetchStatus[id] = 'err';
+    renderRePropGrid();
+    toast(`${p.name} 주소에서 시군구 코드를 찾지 못했습니다`, 'err');
+    return false;
+  }
+
+  _reFetchStatus[id] = 'loading';
+  renderRePropGrid();
+  try {
+    let picked = [];
+    for (let i=0; i<12 && !picked.length; i++) {
+      const xml = await reFetchMonth(lawdCode, reMonthOffset(i), key);
+      picked = rePickDeals(p, reParseDeals(xml));
+      if (!picked.length) await new Promise(r => setTimeout(r, 150));
+    }
+    if (!picked.length) throw new Error('no matching deals');
+    const avg = picked.reduce((s,d)=>s+d.amount,0) / picked.length;
+    p.price = Math.round(avg);
+    p.priceUpdatedAt = new Date().toISOString();
+    p.priceSource = 'molit';
+    _reFetchStatus[id] = 'ok';
+    return true;
+  } catch(e) {
+    console.warn('reFetchOne:', e);
+    _reFetchStatus[id] = 'err';
+    return false;
+  } finally {
+    saveAll();
+    renderRealEstate();
+  }
+}
+
+async function reFetchAll(askKey=true) {
+  if (_reFetching) return;
+  if (!properties.length) { toast('먼저 부동산을 추가하세요','err'); return; }
+  const key = getMolitKey(askKey);
+  if (!key) {
+    toast('자동 갱신을 하려면 공공데이터포털 실거래가 API 서비스키가 필요합니다', 'err');
+    return;
+  }
+  _reFetching = true;
+  const btn = document.querySelector('#page-realestate .topbar-right .btn-ghost');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner">↻</span> 시세 갱신 중'; }
+  let ok = 0, fail = 0;
+  for (const p of properties) {
+    const done = await reFetchOne(p.id, false);
+    done ? ok++ : fail++;
+    await new Promise(r => setTimeout(r, 250));
+  }
+  const now = new Date().toLocaleString('ko-KR');
+  const label = document.getElementById('re-lastUpdate');
+  if (label) label.textContent = `최근 시세 갱신: ${now} · 성공 ${ok} / 실패 ${fail}`;
+  if (btn) { btn.disabled = false; btn.innerHTML = '⚡ 시세 갱신'; }
+  toast(`부동산 시세 갱신 완료 (성공 ${ok} / 실패 ${fail})`, ok ? 'ok' : 'err');
+  _reFetching = false;
+}
+
+function reMaybeAutoRefresh() {
+  if (_reAutoStarted || _reFetching || !getMolitKey(false)) return;
+  const cutoff = Date.now() - RE_AUTO_REFRESH_HOURS * 60 * 60 * 1000;
+  const needsRefresh = properties.some(p => p.type === '아파트' && (!p.priceUpdatedAt || new Date(p.priceUpdatedAt).getTime() < cutoff));
+  if (!needsRefresh) return;
+  _reAutoStarted = true;
+  setTimeout(() => reFetchAll(false), 300);
 }
 
 // ════════════════════════════════════════
@@ -3034,6 +3538,7 @@ async function doLogin() {
   dividends  = lcLoad('pf_div',       sampleDiv());
   properties = lcLoad('pf_props',     sampleProps());
   rentals    = lcLoad('pf_rentals',   sampleRentals());
+  certificates = lcLoad('pf_certs',   sampleCerts());
   document.getElementById('loginScreen').classList.add('hidden');
   enterApp({ displayName: '관리자', email: 'local@local' });
   btn.disabled = false; btn.textContent = '접속';
@@ -3042,7 +3547,7 @@ async function doLogin() {
 async function doLogout() {
   if (!confirm('로그아웃 하시겠습니까?')) return;
   _currentUid = null;
-  holdings = []; dailyLogs = []; dividends = []; properties = []; rentals = [];
+  holdings = []; dailyLogs = []; dividends = []; properties = []; rentals = []; certificates = [];
   document.getElementById('loginScreen').classList.remove('hidden');
   const pwField = document.getElementById('li-pw');
   if (pwField) pwField.value = '';
